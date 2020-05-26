@@ -1,0 +1,268 @@
+2020-03-16 s-n-g
+    * Version 0.8.7.2
+    * Fixing macOS Catalina installation
+
+2020-01-31 s-n-g
+    * Version 0.8.7.1
+    * Fixing mpv playlist option (for mpv 0.32.0)
+
+2019-12-23 s-n-g
+    * Version 0.8.7
+    * Fixing volume issue with mpv
+    * mpv on python3 uses socket communication only; no stdout parsing
+      done anymore, as it is still done on python2, due to title
+      (icy-title) encoding problems.
+    * socat is no longer needed to use mpv
+
+2019-12-14 s-n-g
+    * Version 0.8.6
+    * Adding playlist history (for local playlists)
+    * https URLs will be converted to http before connecting
+    * Fixing station moving when appending station
+    * Config / Default station: pading fixed
+    * WINDOWS: Volume will be saved when mplayer is installed in %APPDATA%\pyradio
+
+2019-11-15 s-n-g
+    * PyRadio will not crush with mpv 0.30.0
+      Changing mpv's volume is still possible, but no info will be
+      presented on the Status Bar.
+      Furthermore, saving mpv's volume will not be possible
+      ( mpv issue #7153: https://github.com/mpv-player/mpv/issues/7153 )
+
+2019-11-12 s-n-g
+    * When default played is changed in the config, a message to restart
+      the application is presented to the user
+    * Config / Default station: pading fixed
+
+2019-11-10 s-n-g
+    * Fixing vlc returned volume parsing (due to locales decimal separator)
+
+2019-10-29 s-n-g
+    * FIX: Playlists flagged as changed when adding a station
+    * Handling CJK presentation on station and playlist view
+    * Preparing for online stations browser
+
+2019-10-23 s-n-g
+    * Handling CJK presentation on station and playlist window
+
+2019-10-20 s-n-g
+    * Version 0.8.2
+    * Fixing chars H,L,M rejected by line editor
+    * Fixing station editor rejecting "\?"
+    * Updating station's editor help messages
+
+2019-10-19 s-n-g
+    * Version 0.8.1
+    * CJK Unified Ideographs supported by the line editor
+    * On python 2, trying to edit a station whose name contains
+      non-ASCII characters is prohibited and will end up in
+      displaying a relevant message
+    * Line editor: using backslash to insert "?" and "\"
+    * Search term will not be lost when resizing the window
+    * Fixing issues with presenting search history
+    * Themes now have a "Edit Cursor" field
+
+2019-09-08 s-n-g
+    * Version 0.8.0
+    * Adding station editor ("a" and "A" to add a station, "e" to edit)
+    * Line editor supports unlimited string length
+    * Main help window separated to two pages (navigation with "n" / "p")
+    * Changing "e" to "E" to change a station's encoding
+    * Changing "p" to "P" to jump to playing station / loaded playlist
+    * Adding H, L to jump to top / bottom of screen
+    * Changing M to jump to middle of screen
+    * Changing volume, saving volume and muting is now available on most
+      windows (pop up and questions)
+    * Manipulating volume (keys m,v) on a help window, will close it
+      if player not playing
+    * Adding ^U, ^D to move station up, down
+    * Search string will not be lost after displaying help
+    * PyRadio runs on Windows (finally). Added an installation BAT file,
+      icons, program shortcut and help (windows.md - windows.html)
+    * Minor bug fixes
+
+2019-07-15 s-n-g
+    * Searching is now available on any window presenting a list of items
+    * Transparency indication presentation always reflects setting
+    * A locked session is indicated next to PyRadio version
+    * Adding "Top" link to html files
+    * Docs updated
+
+2019-07-08 s-n-g
+
+    * Version 0.7.8
+    * fixing playlist recovery message presentation
+    * fixed foreign playlist management
+    * fixed exiting when playlist is modified
+    * when applying a them which is not supported, using "light"
+      if "light" or "light_16_colors" is default
+    * fixing update notification message "Will check again in 0 days"
+    * update notification will clean files in all cases
+    * adding "M" to config station selection
+    * updating help for playlist and config station selection
+    * heavy refactoring; using window stack and redisplay list
+
+2019-06-26 s-n-g
+    * Version 0.7.7
+    * mpv now uses a dedicated socket file. This way multiple instances of
+      PyRadio can be executed.
+    * Introducing session locking.
+    * Added the "--unlock" command line parameter, to force sessions' unlock.
+    * Added "M" command, which will jump to the middle of the list.
+    * PyRadio can load external theme files.
+    * Three more themes added. These are system themes (actual files).
+    * Theme selection window reworked - themes are separated by location,
+      theme selection is remembered when resizing, and loading default or
+      saved theme (in config window).
+    * PyRadio will report reverting to default theme.
+    * PyRadio will check and report when a new release is available.
+    * Added good bye message.
+    * Theme editor implementation started (disabled for this release).
+    * Minor other fixes.
+
+2019-06-06 s-n-g
+    * Verion 0.7.6.2
+      This is a BUG FIX release, fixing config status (indicating whether 
+      config is modified or not)
+
+2019-06-02 s-n-g
+    * Version 0.7.6.1
+      This is a BUG FIX release, fixing regression: config not saved when
+      changing themes
+
+2019-06-01  s-n-g
+    * Version 0.7.6
+    * Added "e" option to change station's encoding.
+    * Implemented playlist backup and recovery, to address saving errors.
+    * Inform user when playlist not found and of playlist recovery result.
+    * Parameter -s - Check if file is supported (ends with .csv)
+
+2019-04-18  s-n-g
+    * Version 0.7.5
+    * Minimum python version supported changed. Now it's 2.7+/3.5+
+    * Added configuration window (opens with "c").
+    * Canceling theme selection (not in config) will restore saved theme.
+    * Done a bit of refactoring.
+
+2019-02-14  s-n-g
+
+    * Version 0.7.4
+    * Fixing p command for playlists view.
+    * Selected station / playlist will be visible when resizing the terminal.
+    * Calculating initial loaded playlist position in window.
+    * Implemented dynamic list padding.
+    * Correctly display failed station when returning to stations mode.
+    * Help window gets redisplayed when the terminal is resized.
+    * Updating docs
+
+2019-02-04  s-n-g
+
+    * Version 0.7.3
+    * Added "p" command to jump to playing station / loaded playlist.
+    * Added two more themes (dark_16_colors and light_16_colors)
+    * Improved black_on_white theme.
+    * On a 8 color terminal, the fall-back theme will be "light",
+      if "light_16_colors" is default.
+    * Exiting if terminal cannot display colors.
+    * Fixed player selection error screen.
+    * Fixed a regression which might appear when loading a playlist
+
+2019-02-02  s-n-g
+
+    * Version 0.7.2
+    * Themes support added (4 hardcoded themes).
+    * Command line option -t (--theme) THEME added.
+    * Config option "theme" added.
+    * Key "t" will open the "Theme Selection Window".
+    * Key "T" will toggle transparency / use terminal's background color.
+    * Alt keyboard combinations will not be considered as ESCAPE char.
+    * Help / message windows use multiple colors.
+    * Fixing a couple of minor bugs.
+
+2019-02-10  s-n-g
+
+    * Version 0.7.1
+    * Avoiding curses layout breakage due to BROKEN PIPE errors
+    * Start of playback detection implemented. This is done by
+      detecting the players audio decoder info, which actually mean
+      that playback is on. If not detected within a timeout value,
+      failure to connect is presumed
+    * Volume adjustment, saving and muting is inhibited before start
+      of playback is detected
+    * Playing a station in random order will not stop until a
+      working station is acquired or another action is taken (e.g 
+      pressing a key)
+    * Stations name is limited to window width
+    * Station title is validated before displayed
+
+2019-01-21  s-n-g
+
+    * Version 0.7.0
+    * added command line options -ls, -scd, -ocd
+    * make sure config dir exists before doing anything with it
+    * make sure the playlist is valid (-s option)
+    * Option -s accepts playlist name only, if it exists in config dir, or
+      playlist number as reported by the -ls command line option
+    * -a command line option works in combination with -s
+    * -l command line option prints a tabular list
+    * started implementing playlist management. Now we can open another
+      playlist, remove a station from a playlist and save a playlist.
+      TODO: rename playlist, copy playlist, add station, edit station
+    * added configuration file (~/.config/pyradio/config)
+      TODO: edit configuration file within PyRadio
+    * Input encoding can now de set either in a station by
+      station mode or globally
+    * ESCAPE now works for exit/cancel
+    * ESCDELAY set to 25ms. Refer to https://stackoverflow.com/questions/27372068/why-does-the-escape-key-have-a-delay-in-python-curses for more info
+    * "Foreign" playlist handing added. A playlist that does not reside in
+      PyRadio's config dir (called a "foreign playlist") can now be copyied
+      there, making it available for opening from within PyRadio.
+    * '/' win no longer display help ('?' is still valid)
+    * minor errors fixed
+    * error_code renamed to operation_mode
+    * build script working on MacOS
+
+2018-12-02  s-n-g
+
+    * Version 0.6.0
+    * PyRadio will not crash when no player found.
+    * PyRadio will only display station name and icy-title (if received)
+    * PyRadio version will include git revision when not on a git tag
+      (i.e.not on a release tag)
+    * Added '-u' option to specify player to use (or detection order)
+    * A help message can be displayed (shortcut '?' or '/')
+    * vlc will unmute on exit
+    * Volume value is displayed while changing
+    * Volume can be saved for mpv and mplayer (shortcut 'v')
+    * pyradio.log is always saved in home directory
+    * Both mpv and socat must be installed for mpv to be used as player
+    * Added man page, thanks to AUR package pyradio-git (not installed
+      by default; it's up to the packagers to do it)
+
+2013-04-03  stac47
+
+    * Version 0.5.1
+    * Fixed regression on bottom panel not updated in Python 3
+    * Support of VLC as the underlying player
+    * Probing the multimedia player available on the host system
+
+2013-03-16  stac47
+
+    * Version 0.5.0
+    * Fix compatibility issue with Python 3
+
+2012-08-31  klen
+
+    * Version 0.4.2
+    * Add '-p' option
+
+2012-08-30  klen
+
+    * Version 0.4.1
+    * Fix user stations loading
+
+2012-08-29  klen
+
+    * Version 0.4.0
+    * Add console interface
+    * Published on pypi

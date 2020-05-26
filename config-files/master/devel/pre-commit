@@ -1,0 +1,48 @@
+#!/bin/bash
+# convert TABs to SPACEs in Changelog
+sed -i 's/\t/    /g' Changelog
+# Create HTML file from md files
+for afile in README.md build.md windows.md
+do
+#[ -z "$(git status | grep ${afile})" ] || {
+    out=${afile/%.md/.html}
+    if [ "$afile" = "README.md" ];then
+        echo '% PyRadio README' > tmp.md
+    elif [ "$afile" = "build.md" ];then
+        echo '% PyRadio Build Instructions' > tmp.md
+    elif [ "$afile" = "windows.md" ];then
+        echo '% Running PyRadio on Windows' > tmp.md
+    fi
+    cat ${afile} >> tmp.md
+    pandoc -s -t html tmp.md -o ${out} || {
+        echo "Error: pandoc not found"
+        rm tmp.md
+        exit 1
+    }
+    sed -i '/<style[^>]*>/a \
+    html {margin: 2em;} \
+    h2 {margin-top: 2.5em; border-bottom:1px solid #D6D6D6;} \
+    h3 {margin-top: 2em;} \
+    dl {margin: 2em;} \
+    dd {margin: 1em;} \
+    dt {font-weight: bold;} \
+    pre { background-color: #F6F6F6; padding: 1.5em; border: 1px solid #E6E6E6; overflow: auto;}' ${out}
+    sed -i -e 's/<code>//g' \
+        -e 's{</code>{{g' \
+        -e 's{<a href="#pyradio">pyradio</a>{[pyradio]{' \
+        -e 's/<p><strong>Tip:/<p style="margin: 1.5em 4em 0 4em; text-indent: -2em;"><strong>Tip:/' \
+        -e 's/<p><strong>Note:/<p style="margin: 1.5em 4em 0 4em; text-indent: -2.5em;"><strong>Note:/' \
+        -e 's/<li><p>/<li>/g' \
+        -e 's{</</p></li>{</li>{g' \
+        -e 's/\.md">/.html">/g' \
+        -e '/h1 class="title"/d' \
+        -e 's/<a href="http/<a target="_blank" href="http/g' \
+        -e 's{</h2>{ <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style>&{' ${out}
+    rm tmp.md
+    if [ "$out" = "windows.html" ];then
+        sed -i -e 's/h3 {margin-top: 2em;}/h3 {margin-top: 2.5em; border-bottom:1px solid #D6D6D6;}/' \
+            -e 's{</h3>{ <span style="padding-left: 10px;"><sup style="font-size: 50%"><a href="#" title="Go to top of the page">Top</a></sup></style>&{' \
+            "$out"
+    fi
+    git add ${out}
+done
