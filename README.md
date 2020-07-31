@@ -6,9 +6,12 @@ PyRadio is a console based Internet radio player. It is implemented in Python, a
 
 # What this does
 
-* Install requirements
-* Install pyradio from sourse (included in this repo)
-* Copy new config files
-* Edito stations file
+* Arch and Debian Based Systems
+  * Install requirements
+  * Install pyradio from sourse (included in this repo)
+  * Copy new config files
+* Edit stations file
 
+### Note
 
+In Arch and Debian bases systems the python-setuptools is a dependency for PyRadio.

@@ -21,35 +21,68 @@
 #
 # -----------------------------------------------------------------
 
-pyradio_source() {
-	echo ""
-	echo " Installing pyradio"
-	sleep 2;
-	cd config-files/master;
-	devel/build_install_pyradio 3
-}
-
-requirements() {
-	config-files/requirements.sh
+install-pyradio() {
+	config-files/systems/install-pyradio.sh
 }
 
 copy_files() {
 	echo ""
 	echo " Getting ready to copy new config files"
-	sleep 2;
-	cp -rv config-files/pyradio ~/.config/ &&
-		echo " pyradio config files copied"
+	sleep 2
+
+	### Check for dir, if not found create it using the mkdir ###
+	dldir="$HOME/.config/pyradio"
+	[ ! -d "$dldir" ] && mkdir -p "$dldir" &&
+	echo " PyRadio directory was created in .config/pyradio" || echo " PyRadio dir found!"
+	echo ""
+
+	cp -af config-files/configs/config ~/.config/pyradio/ &&
+	echo " pyradio config files copied" || echo " It's me, not you!"
+	echo ""
+
+	cp -af config-files/configs/stations.csv ~/.config/pyradio/ &&
+	echo " PyRadio stations was copied" || echo " Uppssss!"
+	echo ""
+}
+
+edit_stations() {
+	echo ""
+	echo " Edit PyRadio Stations File"
+	echo " After your edited this file you need to copy to your"
+	echo " local machine, Pyradio must be close"
+	echo ""
+	sleep 2
+
+	while true; do
+		read -p " Edit PyRadio Stations [y - n ] : " yn
+		case $yn in
+			[Yy]* )
+				vim config-files/configs/stations.csv; break ;;
+			[Nn]* )
+				break ;;
+			* ) echo "Please answer yes or no." ;;
+		esac
+	done
 }
 
 copy_stations() {
 	echo ""
-	echo " Getting ready to copy stations files"
-	sleep 2;
-	cp -rv config-files/pyradio/stations.csv ~/.config/pyradio/ &&
-		echo " stations file was copied"
-}
-edit_stations() {
-	vim config-files/pyradio/stations.csv
+	echo " Getting ready to copy stations file"
+	echo ""
+	sleep 2
+
+	while true; do
+		read -p " Copy PyRadio Stations File [y - n] : " yn
+		case $yn in
+			[Yy]* )
+				cp -af config-files/configs/stations.csv ~/.config/pyradio/ &&
+				echo " stations file was copied" || echo " Sorry, you have a big problem!"
+				echo ""; break ;;
+			[Nn]* )
+				break ;;
+			* ) echo "Please answer yes or no." ;;
+		esac
+	done
 }
 
 press_enter() {
@@ -67,23 +100,23 @@ until [ "$selection" = "0" ]; do
 	clear
 	echo ""
 	echo " DarknessCode"
-	echo "                            _ _        "
-	echo "                           | (_)       "
-	echo "  _ __  _   _ _ __ __ _  __| |_  ___   "
-	echo " | '_ \| | | | '__/ _' |/ _' | |/ _ \  "
-	echo " | |_) | |_| | | | (_| | (_| | | (_) | "
-	echo " | .__/ \__, |_|  \__,_|\__,_|_|\___/  "
-	echo " | |     __/ |                         "
-	echo " |_|    |___/                          "
-	echo " ----------------------------------------------"
-	echo " ### a console based Internet radio player  ###"
-	echo " ----------------------------------------------"
+	echo "  _____       _____           _ _        "
+	echo " |  __ \     |  __ \         | (_)       "
+	echo " | |__) |   _| |__) |__ _  __| |_  ___   "
+	echo " |  ___/ | | |  _  // _' |/ _' | |/ _ \  "
+	echo " | |   | |_| | | \ \ (_| | (_| | | (_) | "
+	echo " |_|    \__, |_|  \_\__,_|\__,_|_|\___/  "
+	echo "         __/ |                           "
+	echo "        |___/			       "
 	echo ""
-	echo " 1 - Install pyradio from source"
-	echo " 2 - Install Requirements"
-	echo " 3 - Copy config files (new install)"
-	echo " 4 - Edit stations List"
-	echo " 5 - Copy stations file"
+	echo " A console based Internet radio player"
+	echo ""
+	echo " 1 - Install pyradio"
+	echo " 2 - Copy config files (new install)"
+	echo ""
+	echo " 3 - Edit stations List"
+	echo " 4 - Copy stations file"
+	echo ""
 	echo " 0 - Exit"
 	echo ""
 	echo -n " Enter selection [1 - 0] : "
@@ -91,11 +124,10 @@ until [ "$selection" = "0" ]; do
 	echo ""
 
 	case $selection in
-		1) clear; pyradio_source  ; press_enter ;;
-		2) clear; requirements   ;;
-		3) clear; copy_files      ; press_enter ;;
-		4) clear; edit_stations  ;;
-		5) clear; copy_stations   ; press_enter ;;
+		1) clear; install-pyradio ;;
+		2) clear; copy_files       ; press_enter ;;
+		3) clear; edit_stations    ; press_enter ;;
+		4) clear; copy_stations    ; press_enter ;;
 		0) clear; exit ;;
 		*) clear; incorrect_selection ; press_enter ;;
 	esac
