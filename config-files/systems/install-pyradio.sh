@@ -56,25 +56,35 @@ install-mplayer() {
 	echo ""
 	sleep 2
 
-	if ! location="$(type -p "mplayer")" || [ -z "mplayer" ]; then
+	while true; do
+		read -p " Install MPlayer [y - n] : " yn
+		case $yn in
+			[Yy]* )
+				if ! location="$(type -p "mplayer")" || [ -z "mplayer" ]; then
 
-		# check if pacman is installed
-		if which pacman > /dev/null; then
+					# check if pacman is installed
+					if which pacman > /dev/null; then
 
-			sudo pacman -S --noconfirm mplayer
+						sudo pacman -S --noconfirm mplayer
 
-		fi
+					# check if apt is installed
+					elif which apt > /dev/null; then
 
-		# check if apt-git is installed
-		if which apt > /dev/null; then
+						sudo apt install -y mplayer
 
-			sudo apt install -y mplayer
+					else
 
-		fi
+						echo " Your system is not Arch or Debian Based System"
+					fi
 
-	else
-		echo " nothing to do!"
-	fi
+					else
+						echo " Nothing to do! MPlayer is installed in your System"
+				fi ; break ;;
+			[Nn]* )
+				break ;;
+			* ) echo "Please answer yes or no." ;;
+		esac
+	done
 }
 
 install-from-source() {
