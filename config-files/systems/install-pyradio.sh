@@ -12,7 +12,7 @@
 #        FILE: install-pyradio.sh
 #       USAGE: ./install-pyradio.sh | sub menu of pyradio-install.sh
 #
-# DESCRIPTION: install pyradio in arch, debian based systems
+# DESCRIPTION: install pyradio in Linux Systems
 #
 #      AUTHOR: DarknessCode
 #       EMAIL: admin@darknesscode.com
@@ -24,35 +24,51 @@
 install-dependencies() {
 	echo ""
 	echo " Installing dependencies for PyRadio"
+	echo " Arch Linux | Debian | Void Linux"
 	echo ""
 	sleep 2
 
-	PS3='Select your based system: '
-	options=("Arch Based" "Debian Based" "Exit")
-	select opt in "${options[@]}"
-	do
-    		case $opt in
-        		"Arch Based")
-				pacman -Qs python-setuptools &&
-				echo " python-setuptools is installed in your system" ||
-				sudo pacman -S --noconfirm --needed python-setuptools; break ;;
+	while true; do
+		read -p " Install Dependencies [y - n] : " yn
+		case $yn in
+			[Yy]* )
+				if ! location="$(type -p "python3-setuptools")" || [ -z "python3-setuptools" ]; then
 
-        		"Debian Based")
-				dpkg -l | grep python3-setuptools &&
-				echo " puthon3-setuptools is installed in your system" ||
-				sudo apt install -y python-setuptools; break ;;
+					# check if pacman is installed
+					if which pacman > /dev/null 2>&1; then
 
-        		"Exit")
-            			break ;;
-        		*) echo "invalid option $REPLY";;
-    		esac
+						sudo pacman -S --noconfirm python-setuptools
+
+					# check if apt is installed
+					elif which apt > /dev/null 2>&1; then
+
+						sudo apt install -y python3-setuptools
+
+					# check if xbps is installed
+					elif which xbps-install > /dev/null 2>&1; then
+
+						sudo xbps-install -Sy python3-setuptools
+
+					else
+
+						echo " Your system is not suported!!!"
+					fi
+
+					else
+						echo " Nothing to do! python3-setuptools is installed in your System"
+				fi ; break ;;
+			[Nn]* )
+				break ;;
+			* ) echo "Please answer yes or no." ;;
+		esac
 	done
-
+	echo ""
 }
 
 install-mplayer() {
 	echo ""
-	echo " Installing mplayer in Arch, Debian Based systems"
+	echo " Installing mplayer"
+	echo " Arch Linux | Debian | Void Linux"
 	echo ""
 	sleep 2
 
@@ -63,18 +79,23 @@ install-mplayer() {
 				if ! location="$(type -p "mplayer")" || [ -z "mplayer" ]; then
 
 					# check if pacman is installed
-					if which pacman > /dev/null; then
+					if which pacman > /dev/null 2>&1; then
 
 						sudo pacman -S --noconfirm mplayer
 
 					# check if apt is installed
-					elif which apt > /dev/null; then
+					elif which apt > /dev/null 2>&1; then
 
 						sudo apt install -y mplayer
 
+					# check if xbps is installed
+					elif which xbps-install > /dev/null 2>&1; then
+
+						sudo xbps-install -Sy mplayer
+
 					else
 
-						echo " Your system is not Arch or Debian Based System"
+						echo " Your system is not suported!!!"
 					fi
 
 					else
@@ -85,6 +106,7 @@ install-mplayer() {
 			* ) echo "Please answer yes or no." ;;
 		esac
 	done
+	echo ""
 }
 
 install-from-source() {
@@ -94,6 +116,7 @@ install-from-source() {
 
 	cd config-files/master;
 	devel/build_install_pyradio 3
+	echo ""
 }
 
 install-aur() {
@@ -102,7 +125,20 @@ install-aur() {
 	echo ""
 	sleep 2
 
-	yay -S pyradio-git && echo " PyRadio was installed" || echo " We have a real problem"
+	yay -S pyradio-git &&
+	echo " PyRadio was installed" || echo " We have a real problem"
+	echo ""
+}
+
+install-aur() {
+	echo ""
+	echo " Install PyRadio From Void Linux Repositories"
+	echo ""
+	sleep 2
+
+	sudo xbps-install -Sy pyradio &&
+	echo " PyRadio was installed" || echo " We have a real problem"
+	echo ""
 }
 
 press_enter() {
@@ -134,9 +170,10 @@ until [ "$selection" = "0" ]; do
 	echo " 1 - Install Dependencies"
 	echo " 2 - MPlanyer"
 	echo ""
-	echo " 3 - Install Pyradio"
+	echo " 3 - Install Pyradio (source)"
 	echo ""
 	echo " 4 - Install Pyradio AUR (Arch)"
+	echo " 5 - Install Pyradio Void Linux (repos)"
 	echo ""
 	echo " 0 - Back"
 	echo ""
@@ -146,10 +183,11 @@ until [ "$selection" = "0" ]; do
 
 	case $selection in
 		1) clear; install-dependencies ; press_enter ;;
-		2) clear; install-mplayer ; press_enter ;;
-		3) clear; install-from-source ; press_enter ;;
-		4) clear; install-aur ; press_enter ;;
+		2) clear; install-mplayer      ; press_enter ;;
+		3) clear; install-from-source  ; press_enter ;;
+		4) clear; install-aur          ; press_enter ;;
+		5) clear; install-void         ; press_enter ;;
 		0) clear; exit ;;
-		*) clear; incorrect_selection ; press_enter ;;
+		*) clear; incorrect_selection  ; press_enter ;;
 	esac
 done
