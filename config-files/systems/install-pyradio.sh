@@ -5,7 +5,7 @@
 # | |_| | (_| | |  |   <| | | |  __/\__ \__ \ |__| (_) | (_| |  __/
 # |____/ \__,_|_|  |_|\_\_| |_|\___||___/___/\____\___/ \__,_|\___|
 # -----------------------------------------------------------------
-# https://darkncesscode.com
+# https://darkncesscode.xyz
 # https://github.com/codedarkness
 # -----------------------------------------------------------------
 #
@@ -15,7 +15,7 @@
 # DESCRIPTION: install pyradio in Linux Systems
 #
 #      AUTHOR: DarknessCode
-#       EMAIL: admin@darknesscode.com
+#       EMAIL: achim@darknesscode.xyz
 #
 #     CREATED: 07-30-20 07:48
 #
@@ -23,7 +23,7 @@
 
 install-dependencies() {
 	echo ""
-	echo " Installing dependencies for PyRadio"
+	echo " Install Dependencies for PyRadio"
 	echo " Arch Linux | Debian | Void Linux"
 	echo ""
 	sleep 2
@@ -65,12 +65,52 @@ install-dependencies() {
 	echo ""
 }
 
-install-mplayer() {
+install-audio-player() {
 	echo ""
-	echo " Installing mplayer"
+	echo " Install Audio Media Player"
 	echo " Arch Linux | Debian | Void Linux"
 	echo ""
+	echo " - MPV"
+	echo " - MPlayer"
+	echo " - VLC"
+	echo ""
 	sleep 2
+
+	while true; do
+		read -p " Install MPV [y - n] : " yn
+		case $yn in
+			[Yy]* )
+				if ! location="$(type -p "mpv")" || [ -z "mpv" ]; then
+
+					# check if pacman is installed
+					if which pacman > /dev/null 2>&1; then
+
+						sudo pacman -S --noconfirm mpv
+
+					# check if apt is installed
+					elif which apt > /dev/null 2>&1; then
+
+						sudo apt install -y mpv
+
+					# check if xbps is installed
+					elif which xbps-install > /dev/null 2>&1; then
+
+						sudo xbps-install -Sy mpv
+
+					else
+
+						echo " Your system is not suported!!!"
+					fi
+
+					else
+						echo " Nothing to do! MPV is installed in your System"
+				fi ; break ;;
+			[Nn]* )
+				break ;;
+			* ) echo "Please answer yes or no." ;;
+		esac
+	done
+	echo ""
 
 	while true; do
 		read -p " Install MPlayer [y - n] : " yn
@@ -107,11 +147,47 @@ install-mplayer() {
 		esac
 	done
 	echo ""
+
+	while true; do
+		read -p " Install VLC Media Player [y - n] : " yn
+		case $yn in
+			[Yy]* )
+				if ! location="$(type -p "vlc")" || [ -z "vlc" ]; then
+
+					# check if pacman is installed
+					if which pacman > /dev/null 2>&1; then
+
+						sudo pacman -S --noconfirm vlc
+
+					# check if apt is installed
+					elif which apt > /dev/null 2>&1; then
+
+						sudo apt install -y vlc
+
+					# check if xbps is installed
+					elif which xbps-install > /dev/null 2>&1; then
+
+						sudo xbps-install -Sy vlc
+
+					else
+
+						echo " Your system is not suported!!!"
+					fi
+
+					else
+						echo " Nothing to do! VLC Media Player is installed in your System"
+				fi ; break ;;
+			[Nn]* )
+				break ;;
+			* ) echo "Please answer yes or no." ;;
+		esac
+	done
+	echo ""
 }
 
 install-from-source() {
 	echo ""
-	echo " Installing pyradio"
+	echo " Installing pyradio from source"
 	sleep 2;
 
 	cd config-files/master;
@@ -163,17 +239,17 @@ until [ "$selection" = "0" ]; do
 	echo " | |   | |_| | | \ \ (_| | (_| | | (_) || |_| | | \__ \ || (_| | | |  __/ |    "
 	echo " |_|    \__, |_|  \_\__,_|\__,_|_|\___/_____|_| |_|___/\__\__,_|_|_|\___|_|    "
 	echo "         __/ |                                                                 "
-	echo "        |___/								     "
+	echo "        |___/								     								 "
 	echo ""
-	echo " Install PyRadio, for Arch and Debian based systems"
+	echo " Install PyRadio, for -Arch Linux -Debian and -Void Linux systems"
 	echo ""
-	echo " 1 - Install Dependencies"
-	echo " 2 - MPlanyer"
+	echo " 1 - Dependencies"
+	echo " 2 - Audio Player"
 	echo ""
-	echo " 3 - Install Pyradio (source)"
+	echo " 3 - Pyradio From Source"
 	echo ""
-	echo " 4 - Install Pyradio AUR (Arch)"
-	echo " 5 - Install Pyradio Void Linux (repos)"
+	echo " 4 - Pyradio AUR (Arch)"
+	echo " 5 - Pyradio Void Linux (repos)"
 	echo ""
 	echo " 0 - Back"
 	echo ""
@@ -183,7 +259,7 @@ until [ "$selection" = "0" ]; do
 
 	case $selection in
 		1) clear; install-dependencies ; press_enter ;;
-		2) clear; install-mplayer      ; press_enter ;;
+		2) clear; install-audio-player ; press_enter ;;
 		3) clear; install-from-source  ; press_enter ;;
 		4) clear; install-aur          ; press_enter ;;
 		5) clear; install-void         ; press_enter ;;
