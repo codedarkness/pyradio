@@ -373,7 +373,7 @@ class PyRadio(object):
             # git_description can be set at build time
             # if so, revision will be shown along with the version
             # if revision is not 0
-            git_description = '0.8.8.2-0-g130ccad'
+            git_description = 'not_from_git'
             if git_description:
                 if git_description == 'not_from_git':
                     if logger.isEnabledFor(logging.INFO):
