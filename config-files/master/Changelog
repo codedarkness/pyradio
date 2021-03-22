@@ -1,3 +1,38 @@
+2021-02-27 s-n-g
+    * Version 0.8.8.5 (BUG FIX release)
+    * Fixing -ap value not activated by player
+    * Commenting out excessive error log messages
+
+2021-02-27 s-n-g
+    * Version 0.8.8.4 (BUG FIX release)
+    * Fixing double click behavior (while in playback
+      double clicking to a different station will start it.
+    * vcl will not start muted (volume = 0)
+
+2021-02-26 s-n-g
+    * Version 0.8.8.3
+    * Basic mouse support implemented
+    * Config option to enable mouse support added
+    * Implementing players extra parameters set.
+    * Player selection Config window redesigned.
+    * Adding -ep. -ap, -lp command line parameters.
+    * Fixing a bug which would lead to a crash when "r"
+      would be pressed in the config window.
+    * Playback will be restarted when vital parameters are
+      changes (encoding, connection type, player parameters).
+    * When restarting playback, play the correct station
+      not the selected one.
+    * adding autostart BAT file on Windows to
+      prevent session locking when Windows
+      terminate while PyRadio is still running
+    * pyradio will always use a profile
+    * Fixing several minor bugs.
+
+2020-12-21 s-n-g
+    * Theme selection window will not crash when resizing
+    * After editing a station, restart playback only if the
+      encoding of the station that's playing has been changed
+
 2020-12-18 s-n-g
     * Version 0.8.8.2
     * Gracefully exit when the terminal is closed

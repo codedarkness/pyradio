@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 from collections import deque
 import logging
-logger = logging.getLogger(__name__)
-
 import locale
 locale.setlocale(locale.LC_ALL, "")
+logger = logging.getLogger(__name__)
 
 
 class Window_Stack_Constants(object):
-    """ Modes of Operation """
+    ''' Modes of Operation '''
     NO_PLAYER_ERROR_MODE = -1
     NORMAL_MODE = 0
     PLAYLIST_MODE = 1
@@ -27,6 +26,7 @@ class Window_Stack_Constants(object):
     NEW_THEME_MODE = 14
     EDIT_THEME_MODE = 15
     EDIT_STATION_ENCODING_MODE = 16
+    IN_PLAYER_PARAMS_EDITOR = 17
     REMOVE_STATION_MODE = 50
     SAVE_PLAYLIST_MODE = 51
     ASK_TO_SAVE_PLAYLIST_WHEN_OPENING_PLAYLIST_MODE = 52
@@ -42,24 +42,28 @@ class Window_Stack_Constants(object):
     CONNECTION_MODE = 62
     PASTE_MODE = 63
     UNNAMED_REGISTER_MODE = 64
+    PLAYER_PARAMS_MODE = 65
     MAIN_HELP_MODE = 100
     MAIN_HELP_MODE_PAGE_2 = 101
     MAIN_HELP_MODE_PAGE_3 = 102
-    PLAYLIST_HELP_MODE = 103
-    CONFIG_HELP_MODE = 104
-    THEME_HELP_MODE = 105
-    SELECT_PLAYER_HELP_MODE = 106
-    SELECT_ENCODING_HELP_MODE = 107
-    SELECT_PLAYLIST_HELP_MODE = 108
-    SELECT_STATION_HELP_MODE = 109
-    NEW_THEME_HELP_MODE = 110
-    EDIT_THEME_HELP_MODE = 111
-    ASK_TO_CREATE_NEW_THEME_MODE = 112
-    SEARCH_HELP_MODE = 113
-    LINE_EDITOR_HELP_MODE = 114
-    REGISTER_HELP_MODE = 115
-    EXTRA_COMMANDS_HELP_MODE = 116
-    YANK_HELP_MODE = 117
+    MAIN_HELP_MODE_PAGE_4 = 103
+    PLAYLIST_HELP_MODE = 104
+    CONFIG_HELP_MODE = 105
+    THEME_HELP_MODE = 106
+    SELECT_PLAYER_HELP_MODE = 107
+    SELECT_ENCODING_HELP_MODE = 108
+    SELECT_PLAYLIST_HELP_MODE = 109
+    SELECT_STATION_HELP_MODE = 110
+    NEW_THEME_HELP_MODE = 111
+    EDIT_THEME_HELP_MODE = 112
+    ASK_TO_CREATE_NEW_THEME_MODE = 113
+    SEARCH_HELP_MODE = 114
+    LINE_EDITOR_HELP_MODE = 115
+    REGISTER_HELP_MODE = 116
+    EXTRA_COMMANDS_HELP_MODE = 117
+    YANK_HELP_MODE = 118
+    MOUSE_RESTART_INFO_MODE = 119
+    IN_PLAYER_PARAMS_EDITOR_HELP_MODE = 120
     # TODO: return values from opening theme
     PLAYLIST_RECOVERY_ERROR_MODE = 200
     PLAYLIST_NOT_FOUND_ERROR_MODE = 201
@@ -87,6 +91,9 @@ class Window_Stack_Constants(object):
     PLAYLIST_RENAME_ERROR = 310
     PLAYLIST_CREATE_ERROR = 311
     PLAYLIST_NOT_SAVED_ERROR_MODE = 312
+    PROFILE_EDIT_DELETE_ERROR_MODE = 313
+    MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE = 314
+    USER_PARAMETER_ERROR = 315
     THEME_MODE = 400
     HISTORY_EMPTY_NOTIFICATION = 500
     UPDATE_NOTIFICATION_MODE = 1000
@@ -118,6 +125,7 @@ class Window_Stack_Constants(object):
         MAIN_HELP_MODE: 'MAIN_HELP_MODE',
         MAIN_HELP_MODE_PAGE_2: 'MAIN_HELP_MODE_PAGE_2',
         MAIN_HELP_MODE_PAGE_3: 'MAIN_HELP_MODE_PAGE_3',
+        MAIN_HELP_MODE_PAGE_4: 'MAIN_HELP_MODE_PAGE_4',
         PLAYLIST_HELP_MODE: 'PLAYLIST_HELP_MODE',
         CONFIG_HELP_MODE: 'CONFIG_HELP_MODE',
         THEME_HELP_MODE: 'THEME_HELP_MODE',
@@ -174,6 +182,13 @@ class Window_Stack_Constants(object):
         CONNECTION_MODE: 'CONNECTION_MODE',
         PASTE_MODE: 'PASTE_MODE',
         UNNAMED_REGISTER_MODE: 'UNNAMED_REGISTER_MODE',
+        PROFILE_EDIT_DELETE_ERROR_MODE: 'PROFILE_EDIT_DELETE_ERROR_MODE ',
+        MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE: 'MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE',
+        PLAYER_PARAMS_MODE: 'PLAYER_PARAMS_MODE',
+        MOUSE_RESTART_INFO_MODE: 'MOUSE_RESTART_INFO_MODE',
+        IN_PLAYER_PARAMS_EDITOR: 'IN_PLAYER_PARAMS_EDITOR',
+        IN_PLAYER_PARAMS_EDITOR_HELP_MODE: 'IN_PLAYER_PARAMS_EDITOR_HELP_MODE',
+        USER_PARAMETER_ERROR: 'USER_PARAMETER_ERROR',
     }
 
     ''' When PASSIVE_WINDOWS target is one of them,
@@ -192,6 +207,7 @@ class Window_Stack_Constants(object):
         MAIN_HELP_MODE,
         MAIN_HELP_MODE_PAGE_2,
         MAIN_HELP_MODE_PAGE_3,
+        MAIN_HELP_MODE_PAGE_4,
         CONFIG_HELP_MODE,
         SELECT_PLAYER_HELP_MODE,
         SELECT_PLAYLIST_HELP_MODE,
@@ -225,6 +241,11 @@ class Window_Stack_Constants(object):
         PLAYLIST_CREATE_ERROR,
         PLAYLIST_NOT_SAVED_ERROR_MODE,
         UNNAMED_REGISTER_MODE,
+        PROFILE_EDIT_DELETE_ERROR_MODE,
+        MAXIMUM_NUMBER_OF_PROFILES_ERROR_MODE,
+        MOUSE_RESTART_INFO_MODE,
+        IN_PLAYER_PARAMS_EDITOR_HELP_MODE,
+        USER_PARAMETER_ERROR,
     )
 
     def __init__(self):
@@ -249,8 +270,9 @@ class Window_Stack(Window_Stack_Constants):
     @operation_mode.setter
     def operation_mode(self, a_mode):
         if a_mode in self.MAIN_MODES:
-            # also setting operation_mode in
-            # window_mode property setter
+            ''' also setting operation_mode in
+                window_mode property setter
+            '''
             self.window_mode = a_mode
         else:
             tmp = [a_mode, self._dq[-1][1]]
@@ -303,14 +325,14 @@ class Window_Stack(Window_Stack_Constants):
         return
 
     def str_to_mode(self, stringToFind):
-        """ return mode number when givven mode name """
+        ''' return mode number when givven mode name '''
         for item in self.MODE_NAMES.items():
             if item[1] == stringToFind:
                 return item[0]
         return -2
 
     def str_to_mode_tuple(self, stringToFind):
-        """ return mode tuple when givven mode name """
+        ''' return mode tuple when givven mode name '''
         for item in self.MODE_NAMES.items():
             if item[1] == stringToFind:
                 return item

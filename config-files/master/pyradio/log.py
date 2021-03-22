@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# '''- coding: utf-8 -*- '''
 import curses
 from sys import version_info
 import logging
@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class Log(object):
-    """ Log class that outputs text to a curses screen """
+    ''' Log class that outputs text to a curses screen '''
 
     msg = suffix = counter = cursesScreen = None
 
@@ -25,6 +25,8 @@ class Log(object):
 
     _player_stopped = 0
 
+    _show_status_updates = False
+
     def __init__(self):
         self.width = None
 
@@ -32,7 +34,7 @@ class Log(object):
         self.cursesScreen = cursesScreen
         self.width = int(cursesScreen.getmaxyx()[1] - 1)
 
-        # Redisplay the last message
+        ''' Redisplay the last message '''
         if self.msg:
             self.write(self.msg)
 
@@ -60,9 +62,9 @@ class Log(object):
                     elif msg.startswith(player_start_stop_token[0]):
                         self._player_stopped = 0
                 if msg and self._player_stopped > 1:
-                    """ Refuse to print anything if "Playback stopped"
+                    ''' Refuse to print anything if "Playback stopped"
                         was the last message printed
-                    """
+                    '''
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Refusing to show message; player is stopped: "{}"'.format(msg))
                     # return
@@ -105,28 +107,25 @@ class Log(object):
                     self.counter = None
                     self._player_stopped = 0
                     return
-                """ update main message """
+                ''' update main message '''
                 if self.msg:
                     self.cursesScreen.erase()
                     try:
-                        d_msg = self.msg.strip()[0: self.width].replace(
-                            "\r", ""
-                        ).replace(
-                            "\n", ""
-                        )
+                        d_msg = self.msg.strip()[0: self.width].replace('\r', '').replace('\n', '')
                         self.cursesScreen.addstr(0, 1, d_msg)
                     except:
                         try:
-                            d_msg = self.msg.encode('utf-8', 'replace').strip()[0: self.width].replace("\r", "").replace("\n", "")
+                            d_msg = self.msg.encode('utf-8', 'replace').strip()[0: self.width].replace('\r', '').replace('\n', '')
                             self.cursesScreen.addstr(0, 1, d_msg)
                         except:
                             if logger.isEnabledFor(logging.ERROR):
                                 logger.error('Cannot update the Status Bar...')
-                    if logger.isEnabledFor(logging.DEBUG):
-                        try:
-                            logger.debug('Status: "{}"'.format(self.msg))
-                        except:
-                            pass
+                    if self._show_status_updates:
+                        if logger.isEnabledFor(logging.DEBUG):
+                            try:
+                                logger.debug('Status: "{}"'.format(self.msg))
+                            except:
+                                pass
 
                 self._active_width = self.width
 
@@ -135,7 +134,7 @@ class Log(object):
                     self.counter = None
                     self._player_stopped = 0
                     return
-                """ display suffix """
+                ''' display suffix '''
                 if self.suffix:
                     d_msg = ' [' + self.suffix + ']'
                     try:
@@ -151,10 +150,11 @@ class Log(object):
                     first_print = self._do_i_print_last_char(first_print)
                     self.cursesScreen.refresh()
                     self._active_width -= len(d_msg)
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('Suffix: {}'.format(self.suffix))
+                if self._show_status_updates:
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('Suffix: {}'.format(self.suffix))
 
-                """ display counter """
+                ''' display counter '''
                 if self.counter:
                     if self.counter == '0':
                         self.counter = None
@@ -170,14 +170,15 @@ class Log(object):
                         self.cursesScreen.refresh()
                         self._active_width -= len(d_msg)
                         self.display_help_message = False
-                if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('Counter: {}'.format(self.counter))
+                if self._show_status_updates:
+                    if logger.isEnabledFor(logging.DEBUG):
+                            logger.debug('Counter: {}'.format(self.counter))
 
                 if self.asked_to_stop:
                     self.asked_to_stop = False
                     self.counter = None
                     return
-                """ display press ? """
+                ''' display press ? '''
                 if help_msg or self.display_help_message:
                     if not self.error_msg:
                         self.counter = None
@@ -188,8 +189,9 @@ class Log(object):
                             suffix_string)
                         self.cursesScreen.refresh()
                         self.display_help_message = True
-                        if logger.isEnabledFor(logging.DEBUG):
-                            logger.debug('Press ? for help: yes')
+                        if self._show_status_updates:
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug('Press ? for help: yes')
                 else:
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('Press ? for help: no')
