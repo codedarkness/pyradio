@@ -8,14 +8,9 @@ from sys import platform, version_info
 from contextlib import contextmanager
 
 from .radio import PyRadio
-from .config import PyRadioConfig
+from .config import PyRadioConfig, SUPPORTED_PLAYERS
 
 PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-
-if platform.startswith('win'):
-	IMPLEMENTED_PLAYERS =('mplayer', 'cvlc')
-else:
-	IMPLEMENTED_PLAYERS =('mpv', 'mplayer', 'cvlc')
 
 @contextmanager
 def pyradio_config_file():
@@ -36,11 +31,11 @@ def pyradio_config_file():
             pass
 
 def __configureLogger():
-    logger = logging.getLogger("pyradio")
+    logger = logging.getLogger('pyradio')
     logger.setLevel(logging.DEBUG)
 
     # Handler
-    fh = logging.FileHandler(path.join(path.expanduser("~"), "pyradio.log"))
+    fh = logging.FileHandler(path.join(path.expanduser('~'), 'pyradio.log'))
     fh.setLevel(logging.DEBUG)
 
     # create formatter
@@ -64,35 +59,107 @@ def shell():
         sys.exit(1)
 
     requested_player = ''
-    parser = ArgumentParser(description="Curses based Internet radio player")
-    parser.add_argument("-s", "--stations", default='',
-                        help="Use specified station CSV file.")
-    parser.add_argument("-p", "--play", nargs='?', default='False',
-                        help="Start and play."
-                        "The value is num station or empty for random.")
-    parser.add_argument("-u", "--use-player", default='',
-            help="Use specified player. "
-            "A comma-separated list can be used to specify detection order. "
-            "Supported players: mpv, mplayer, vlc.")
-    parser.add_argument("-a", "--add", action='store_true',
-                        help="Add station to list.")
-    parser.add_argument("-ls", "--list-playlists", action='store_true',
-                        help="List of available playlists in config dir.")
-    parser.add_argument("-l", "--list", action='store_true',
-                        help="List of available stations in a playlist.")
-    parser.add_argument("-t", "--theme", default='', help="Use specified theme.")
-    parser.add_argument("-scd", "--show-config-dir", action='store_true',
-                        help="Print config directory [CONFIG DIR] location and exit.")
-    parser.add_argument("-ocd", "--open-config-dir", action='store_true',
-                        help="Open config directory [CONFIG DIR] with default file manager.")
+    parser = ArgumentParser(description='Curses based Internet radio player')
+    parser.add_argument('-s', '--stations', default='',
+                        help='Use specified station CSV file.')
+    parser.add_argument('-p', '--play', nargs='?', default='False',
+                        help='Start and play.'
+                        'The value is num station or empty for random.')
+    parser.add_argument('-u', '--use-player', default='',
+            help='Use specified player. '
+            'A comma-separated list can be used to specify detection order. '
+            'Supported players: mpv, mplayer, vlc.')
+    parser.add_argument('-a', '--add', action='store_true',
+                        help='Add station to list.')
+    parser.add_argument('-ls', '--list-playlists', action='store_true',
+                        help='List of available playlists in config dir.')
+    parser.add_argument('-l', '--list', action='store_true',
+                        help='List of available stations in a playlist.')
+    parser.add_argument('-t', '--theme', default='', help='Use specified theme.')
+    parser.add_argument('-scd', '--show-config-dir', action='store_true',
+                        help='Print config directory [CONFIG DIR] location and exit.')
+    parser.add_argument('-ocd', '--open-config-dir', action='store_true',
+                        help='Open config directory [CONFIG DIR] with default file manager.')
+    parser.add_argument('-ep', '--extra-player_parameters', default=None,
+                        help="Provide extra player parameters as a string. The parameter is saved in the configuration file and is activated for the current session. The string\'s format is [player_name:parameters]. player_name can be 'mpv', 'mplayer' or 'vlc'. Alternative format to pass a profile: [player_name:profile:profile_name]. In this case, the profile_name must be a valid profile defined in the player\'s config file (not for VLC).")
+    parser.add_argument('-ap', '--active-player-param-id', default=0, help='Specify the extra player parameter set to be used with the default player. ACTIVE_PLAYER_PARAM_ID is 1-11 (refer to the output of the -lp option)')
+    parser.add_argument('-lp', '--list-player-parameters', default=None,
+                        action='store_true',
+                        help='List extra players parameters.')
     parser.add_argument('--unlock', action='store_true',
                         help="Remove sessions' lock file.")
-    parser.add_argument("-d", "--debug", action='store_true',
-                        help="Start pyradio in debug mode.")
+    parser.add_argument('-d', '--debug', action='store_true',
+                        help='Start pyradio in debug mode.')
     args = parser.parse_args()
     sys.stdout.flush()
 
     with pyradio_config_file() as pyradio_config:
+
+        ''' chaeck conflicting parameters '''
+        if args.active_player_param_id and \
+                args.extra_player_parameters:
+          print('Error: You cannot use parameters "-ep" and "-ap" together!\n')
+          sys.exit(1)
+
+        ''' user specified extra player parameter '''
+        if args.active_player_param_id:
+            try:
+                a_param = int(args.active_player_param_id)
+            except ValueError:
+                print('Error: Parameter -ap is not a number\n')
+                sys.exit(1)
+            if 1 <= a_param <= 11:
+                pyradio_config.user_param_id = a_param
+            else:
+                print('Error: Parameter -ap must be between 1 and 11')
+                print('       Actually, it must be between 1 and the maximum')
+                print('       number of parameters for your default player.\n')
+                args.list_player_parameters = True
+
+        ''' list extra player parameters '''
+        if args.list_player_parameters:
+            print('PyRadio Players Extra Parameters')
+            print(32 * '-')
+            pyradio_config.read_config()
+            default_player_name = pyradio_config.opts['player'][1].replace(' ', '').split(',')[0]
+            if default_player_name == '':
+                default_player_name = SUPPORTED_PLAYERS[0]
+            for a_player in SUPPORTED_PLAYERS:
+                if default_player_name == a_player:
+                    print('Player: ' + a_player + ' (default)')
+                else:
+                    print('Player: ' + a_player)
+                default = 0
+                for i, a_param in enumerate(pyradio_config.saved_params[a_player]):
+                    if i == 0:
+                        default = int(a_param)
+                    else:
+                        str_default = '(default)' if i == default else ''
+                        count = str(i) if i > 9 else ' ' + str(i)
+                        print('    {0}. {1} {2}'.format(count, a_param, str_default))
+                print('')
+            sys.exit()
+
+        ''' extra player parameters '''
+        if args.extra_player_parameters:
+            if ':' in args.extra_player_parameters:
+                if pyradio_config.locked:
+                    print('Error: This session is locked!')
+                    print('       Please exist any other instances of the program')
+                    print('       that are currently running and try again.')
+                    sys.exit(1)
+                else:
+                    if args.extra_player_parameters.startswith('vlc:profile'):
+                        print('Error in parameter: "-ep".')
+                        print('  VLC does not supports profiles\n')
+                        sys.exit()
+                    else:
+                        pyradio_config.command_line_params = args.extra_player_parameters
+            else:
+                print('Error in parameter: "-ep".')
+                print('  Parameter format: "player_name:parameters"')
+                print('                 or "player_name:profile:name_of_profile"\n')
+                sys.exit()
 
         if args.unlock:
             pyradio_config.locked = False
@@ -198,13 +265,20 @@ def shell():
             req_player=requested_player,
             theme=theme_to_use
         )
-        """ Setting ESCAPE key delay to 25ms
-        Refer to: https://stackoverflow.com/questions/27372068/why-does-the-escape-key-have-a-delay-in-python-curses"""
+        ''' Setting ESCAPE key delay to 25ms
+            Refer to: https://stackoverflow.com/questions/27372068/why-does-the-escape-key-have-a-delay-in-python-curses
+        '''
         environ.setdefault('ESCDELAY', '25')
         set_terminal_title()
         curses.wrapper(pyradio.setup)
         if pyradio.setup_return_status:
-            print('\nThank you for using PyRadio. Cheers!')
+            if pyradio_config.PROGRAM_UPDATE:
+                print('\nUpdating PyRadio')
+                print('  Current version: {}'.format(pyradio_config.PROGRAM_UPDATE['cur_version'].replace(' PyRadio ', '')))
+                print('      New version: {}\n'.format(pyradio_config.PROGRAM_UPDATE['new_version']))
+                print('\n')
+            else:
+                print('\nThank you for using PyRadio. Cheers!')
         else:
             print('\nThis terminal can not display colors.\nPyRadio cannot function in such a terminal.\n')
 
@@ -233,17 +307,17 @@ def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True
     elif ret == -7:
         print('Error: Playlist recovery failed!\n')
         if cnf.playlist_recovery_result == 1:
-            msg = """Both a playlist file (CSV) and a playlist backup file (TXT)
+            msg = '''Both a playlist file (CSV) and a playlist backup file (TXT)
             exist for the selected playlist. In this case, PyRadio would
             try to delete the CSV file, and then rename the TXT file to CSV.\n
             Unfortunately, deleting the CSV file has failed, so you have to
-            manually address the issue."""
+            manually address the issue.'''
         else:
-            msg = """A playlist backup file (TXT) has been found for the selected
+            msg = '''A playlist backup file (TXT) has been found for the selected
             playlist. In this case, PyRadio would try to rename this file
             to CSV.\n
             Unfortunately, renaming this file has failed, so you have to
-            manually address the issue."""
+            manually address the issue.'''
         print(msg)
         #open_conf_dir(cnf)
         sys.exit(1)
@@ -257,30 +331,32 @@ def set_terminal_title():
         import ctypes
         try:
             if pyradio_config.locked:
-                ctypes.windll.kernel32.SetConsoleTitleW("PyRadio: The Internet Radio player (Session Locked)")
+                ctypes.windll.kernel32.SetConsoleTitleW('PyRadio: The Internet Radio player (Session Locked)')
             else:
-                ctypes.windll.kernel32.SetConsoleTitleW("PyRadio: The Internet Radio player")
+                ctypes.windll.kernel32.SetConsoleTitleW('PyRadio: The Internet Radio player')
         except:
             pass
     else:
         try:
             if pyradio_config.locked:
-                sys.stdout.write("\x1b]2;PyRadio: The Internet Radio player (Session Locked)\x07")
+                sys.stdout.write('\x1b]2;PyRadio: The Internet Radio player (Session Locked)\x07')
             else:
-                sys.stdout.write("\x1b]2;PyRadio: The Internet Radio player\x07")
+                sys.stdout.write('\x1b]2;PyRadio: The Internet Radio player\x07')
         except:
             pass
+
+    sys.stdout.flush()
 
 def open_conf_dir(cnf):
     import subprocess
     import os
     import platform
-    if platform.system().lower() == "windows":
+    if platform.system().lower() == 'windows':
         os.startfile(cnf.stations_dir)
-    elif platform.system().lower() == "darwin":
-        subprocess.Popen(["open", cnf.stations_dir])
+    elif platform.system().lower() == 'darwin':
+        subprocess.Popen(['open', cnf.stations_dir])
     else:
-        subprocess.Popen(["xdg-open", cnf.stations_dir])
+        subprocess.Popen(['xdg-open', cnf.stations_dir])
 
 def get_format_string(stations):
     len0 = len1 = 0

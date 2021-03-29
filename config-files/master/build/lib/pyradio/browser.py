@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 
 
 class PyRadioStationsBrowser(object):
-    """A base class to get results from online radio directory services.
+    """ A base class to get results from online radio directory services.
 
-    Actual implementations should be subclasses of this one.
+        Actual implementations should be subclasses of this one.
     """
 
     BASE_URL = ''
@@ -40,15 +40,15 @@ class PyRadioStationsBrowser(object):
     _outer_internal_body_half_diff = 1
 
     def __init__(self, search=None):
-        """Initialize the station's browser.
+        """ Initialize the station's browser.
 
-        It should return a valid search result (for example,
-        www.radio-browser.info implementation, returns 100 stations
-        sorted by number of votes).
+            It should return a valid search result (for example,
+            www.radio-browser.info implementation, returns 100 stations
+            sorted by number of votes).
 
-        Parameters
-        ----------
-        search
+            Parameters
+            ----------
+            search
             Search parameters to be used instead of the default.
         """
 
@@ -330,7 +330,7 @@ class PyRadioBrowserInfoBrowser(PyRadioStationsBrowser):
             r.raise_for_status()
             logger.error(r.text)
             self._raw_stations = self._extract_data(json.loads(r.text))
-            logger.error('DE {}'.format(self._raw_stations))
+            # logger.error('DE {}'.format(self._raw_stations))
         except requests.exceptions.RequestException as e:
             if logger.isEnabledFor(logging.ERROR):
                 logger.error(e)
