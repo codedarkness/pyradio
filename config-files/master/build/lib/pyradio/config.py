@@ -12,6 +12,8 @@ from datetime import datetime
 from shutil import copyfile, move
 import threading
 from copy import deepcopy
+from pyradio import version, app_state, stations_updated
+
 from .browser import PyRadioStationsBrowser, probeBrowsers
 HAS_REQUESTS = True
 try:
@@ -85,6 +87,12 @@ class PyRadioStations(object):
 
     _registers_lock = threading.Lock()
 
+    ''' set to True if a stations.csv is found in user's folder '''
+    _user_csv_found = False
+
+    ''' mark changed package stations.csv  '''
+    _integrate_stations = False
+
     def __init__(self, stationFile=''):
         if platform.startswith('win'):
             self._open_string_id = 1
@@ -117,6 +125,22 @@ class PyRadioStations(object):
 
             self._move_old_csv(self.stations_dir)
             self._check_stations_csv(self.stations_dir, self.root_path)
+
+    @property
+    def integrate_stations(self):
+        return self._integrate_stations
+
+    @integrate_stations.setter
+    def user_has_stations_csv(self, val):
+        raise ValueError('parameter is read only')
+
+    @property
+    def user_has_stations_csv(self):
+        return self._user_csv_found
+
+    @user_has_stations_csv.setter
+    def user_has_stations_csv(self, val):
+        raise ValueError('parameter is read only')
 
     @property
     def is_register(self):
@@ -262,6 +286,7 @@ class PyRadioStations(object):
             E.g. not need sudo when you add new station, etc '''
 
         if path.exists(path.join(usr, 'stations.csv')):
+            self._user_csv_found = True
             return
         else:
             copyfile(root, path.join(usr, 'stations.csv'))
@@ -374,6 +399,40 @@ class PyRadioStations(object):
             else:
                 return '', -2
 
+    def _package_stations(self):
+        ''' read package stations.csv file '''
+        with open(self.root_path, 'r') as cfgfile:
+            for row in csv.reader(filter(lambda row: row[0]!='#', cfgfile), skipinitialspace=True):
+                if not row:
+                    continue
+                try:
+                    name, url = [s.strip() for s in row]
+                    yield [name, url, '', '']
+                except:
+                    try:
+                        name, url, enc = [s.strip() for s in row]
+                        yield [name, url, enc, '']
+                    except:
+                        name, url, enc, onl = [s.strip() for s in row]
+                        yield [name, url, enc, onl]
+
+    def integrate_playlists(self):
+        ''''''
+
+        ''' get user station urls '''
+        self.added_stations = 0
+        urls = []
+        for n in self.stations:
+            urls.append(n[1])
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('----==== Stations integration ====----')
+        for a_pkg_station in self._package_stations():
+            if a_pkg_station[1] not in urls:
+                self.stations.append(a_pkg_station)
+                self.added_stations += 1
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('Added: {0} - {1}'.format(self.added_stations, a_pkg_station))
+
     def read_playlist_file(self, stationFile='', is_register=False):
         ''' Read a csv file
             Returns: number
@@ -454,6 +513,37 @@ class PyRadioStations(object):
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('read_playlist_file: Playlist version: {}'.format(self._playlist_version_to_string[self._playlist_version]))
         self.jump_tag = -1
+
+        ''' check for package's stations.csv change '''
+        delete_ver_files = False
+        if self._user_csv_found:
+            if stationFile == path.join(self.stations_dir, 'stations.csv'):
+                if self.current_pyradio_version is None:
+                    self.get_pyradio_version()
+                ver_file = path.join(self.stations_dir, '.' + self.current_pyradio_version + '.ver')
+                if stations_updated:
+                    if not path.exists(ver_file):
+                        import filecmp
+                        if not filecmp.cmp(stationFile, self.root_path):
+                            ''' need to ask the user to integrate stations '''
+                            self._integrate_stations = True
+                            delete_ver_files = True
+                            if logger.isEnabledFor(logging.DEBUG):
+                                logger.debug('Stations integration is due!')
+                else:
+                    ''' delete all ver files and create current '''
+                    delete_ver_files = True
+        if delete_ver_files:
+            files = glob.glob(path.join(self.stations_dir, '.*.ver'))
+            if files:
+                for a_file in files:
+                    try:
+                        remove(a_file)
+                    except:
+                        pass
+            with open(ver_file, 'a') as f:
+                pass
+
         return self.number_of_stations
 
     def _recover_backed_up_playlist(self, stationFile):
@@ -879,7 +969,10 @@ class PyRadioStations(object):
         return -1
 
     def open_browser(self, url):
-        self._online_browser = probeBrowsers(url)(self.default_encoding)
+        self._online_browser = probeBrowsers(url)(
+            self.default_encoding,
+            pyradio_info=self.info
+        )
         if self._online_browser:
             self.stations = self._online_browser.stations(2)
             self._reading_stations = []
@@ -925,7 +1018,7 @@ class PyRadioStations(object):
         self._ps.remove_duplicates()
 
     def history_item(self, an_item=-1):
-        logger.error('DE /// history_item = {}'.format(self._ps._p[an_item]))
+        # logger.error('DE /// history_item = {}'.format(self._ps._p[an_item]))
         return self._ps._p[an_item][:]
 
     def find_history_by_station_path(self, a_path):
@@ -958,6 +1051,7 @@ class PyRadioConfig(PyRadioStations):
     ''' True if lock file exists '''
     locked = False
 
+    _distro = 'None'
     opts = collections.OrderedDict()
     opts['general_title'] = ['General Options', '']
     opts['player'] = ['Player: ', '']
@@ -1001,7 +1095,8 @@ class PyRadioConfig(PyRadioStations):
     '''
     user_param_id = 0
 
-    PROGRAM_UPDATE = None
+    PROGRAM_UPDATE = False
+    current_pyradio_version = None
 
     def __init__(self):
         self.backup_player_params = None
@@ -1018,6 +1113,7 @@ class PyRadioConfig(PyRadioStations):
         self.connection_timeout = '10'
         self.theme = 'dark'
         self.use_transparency = False
+        self._distro = 'None'
 
         if self.params_changed:
             self.dirty_config = True
@@ -1036,6 +1132,14 @@ class PyRadioConfig(PyRadioStations):
         self._check_config_file(self.stations_dir)
         self.config_file = path.join(self.stations_dir, 'config')
         self.force_to_remove_lock_file = False
+
+    @property
+    def distro(self):
+        return self._distro
+
+    @distro.setter
+    def distro(self, val):
+        raise ValueError('parameter is read only')
 
     @property
     def profile_name(self):
@@ -1224,8 +1328,9 @@ class PyRadioConfig(PyRadioStations):
         '''
         try:
             ret = int(self.opts['connection_timeout'][1])
-            if not 5 <= ret <= 60:
-                ret = 10
+            if ret != 0:
+                if not 5 <= ret <= 60:
+                    ret = 10
         except ValueError:
             ret = 10
         self.opts['connection_timeout'][1] = str(ret)
@@ -1259,6 +1364,45 @@ class PyRadioConfig(PyRadioStations):
     @session_lock_file.setter
     def session_lock_file(self, val):
         return
+
+    def get_pyradio_version(self):
+        ''' reads pyradio version from installed files
+
+            Retrurns
+                self.info
+                    The string to display at left top corner of main window
+                self.get_current_pyradio_version
+                    The version to use when checking for updates
+        '''
+        ret = None
+        if app_state:
+            self.info = " PyRadio {0}-{1} ".format(version, app_state)
+        else:
+            self.info = " PyRadio {0} ".format(version)
+            ''' git_description can be set at build time
+                if so, revision will be shown along with the version
+            '''
+            # if revision is not 0
+            git_description = ''
+            if git_description:
+                if git_description == 'not_from_git':
+                    ret = "RyRadio built from zip file (revision unknown)"
+                else:
+                    git_info = git_description.split('-')
+                    if git_info[1] != '0':
+                        try:
+                            if 'beta' in git_info[1] or 'rc' in git_info[1].lower():
+                                self.info = " Pyradio {1}-{1}".format(git_info[0], git_info[1])
+                                ret = "RyRadio built from git: https://github.com/coderholic/pyradio/commit/{0} (rev. {1})".format(git_info[-1], git_info[2])
+                            else:
+                                self.info = " PyRadio {0}-r{1} ".format(version, git_info[1])
+                                ret = "RyRadio built from git: https://github.com/coderholic/pyradio/commit/{0} (rev. {1})".format(git_info[-1], git_info[1])
+                        except:
+                            pass
+        self.current_pyradio_version = self.info.replace(' PyRadio ', '').replace(' ', '')
+        # if self._distro != 'None':
+        #     self.info += '({})'.format(self._distro)
+        return ret
 
     def setup_mouse(self):
         if self.enable_mouse:
@@ -1320,7 +1464,7 @@ class PyRadioConfig(PyRadioStations):
             if platform == 'win32':
                 self._session_lock_file = path.join(getenv('APPDATA'), 'pyradio', 'pyradio.lock')
             else:
-                self._session_lock_file = path.join(getenv('HOME'), '.config', 'pyradio')
+                self._session_lock_file = path.join(getenv('HOME'), '.config', 'pyradio', 'pyradio.lock')
         if path.exists(self._session_lock_file):
             if platform == 'win32':
                 win_lock = path.join(getenv('APPDATA'), 'pyradio', '_windows.lock')
@@ -1407,7 +1551,9 @@ class PyRadioConfig(PyRadioStations):
                     self.opts['player'][1] = self.opts['player'][1].replace('mpv,', '')
             elif sp[0] == 'connection_timeout':
                 self.opts['connection_timeout'][1] = sp[1].strip()
-                ''' check integer number and set to 10 if error '''
+                ''' check integer number and set to 10 if error
+                    x is a dummy parameter
+                '''
                 x = self.connection_timeout_int
             elif sp[0] == 'default_encoding':
                 self.opts['default_encoding'][1] = sp[1].strip()
@@ -1457,9 +1603,29 @@ class PyRadioConfig(PyRadioStations):
                            'mplayer_parameter',
                            'vlc_parameter'):
                 self._config_to_params(sp)
+            elif sp[0] == 'distro':
+                ''' mark as dirty to force saving config to remove setting '''
+                # self.dirty_config = True
+                self._distro = sp[1].strip()
+
+        ''' read distro from package config file '''
+        package_config_file = path.join(path.dirname(__file__), 'config')
+        try:
+            with open(package_config_file, 'r') as pkg_config:
+                lines = [line.strip() for line in pkg_config if line.strip() and not line.startswith('#') ]
+            for line in lines:
+                sp = line.split('=')
+                sp[0] = sp[0].strip()
+                sp[1] = sp[1].strip()
+                if sp[0] == 'distro':
+                    self._distro = sp[1].strip()
+                    if not self._distro:
+                        self._distro = 'None'
+        except:
+            self._distro = 'None'
 
         ''' make sure extra params have only up to 10 items each
-        (well, actually 11 items, since the first one is the
+            (well, actually 11 items, since the first one is the
             index to the default string in the list)
         '''
         if self.params:
@@ -1611,7 +1777,7 @@ enable_mouse = {4}
 # unreachable, and display the "Failed to connect to: [station]"
 # message.
 #
-# Valid values: 5 - 60
+# Valid values: 5 - 60, 0 disables check
 # Default value: 10
 connection_timeout = {5}
 

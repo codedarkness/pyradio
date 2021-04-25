@@ -4,11 +4,14 @@
 
 Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 
+## Table of Contents
 
-## Table of contents
+<!-- vim-markdown-toc Marked -->
 
 * [MPlayer installation](#mplayer-installation)
-    * [Adding MPlayer to the PATH](#adding-mplayer-to-the-path)
+* [Adding MPlayer to the PATH](#adding-mplayer-to-the-path)
+
+<!-- vim-markdown-toc -->
 
 [[Back to Build Instructions]](windows.md) [[Back to README]](README.md)
 
@@ -49,7 +52,7 @@ If you are unsure on how to do that, please refer to the following image (you ca
 [Navigating to %APPDATA%](https://members.hellug.gr/sng/pyradio/appdata.jpg)
 
 
-### Adding MPlayer to the PATH
+## Adding MPlayer to the PATH
 
 The final step is to add MPlayer to the PATH System Variable.
 
@@ -69,11 +72,9 @@ When you are back on, verify that you can run **MPlayer**; open a console (press
 
 If you get something similar to the following snippet, you are all good.
 
-```
-MPlayer Redxii-SVN-r38119-6.2.0 (x86_64) (C) 2000-2018 MPlayer Team
-Using FFmpeg N-92801-g7efe84aebd (2018-12-25 00:44:17 +0100)
-Compiled on 2018-12-25 13:55:17 EST (rev. 1)
-Usage:   mplayer [options] [url|path/]filename
-```
+    MPlayer Redxii-SVN-r38119-6.2.0 (x86_64) (C) 2000-2018 MPlayer Team
+    Using FFmpeg N-92801-g7efe84aebd (2018-12-25 00:44:17 +0100)
+    Compiled on 2018-12-25 13:55:17 EST (rev. 1)
+    Usage:   mplayer [options] [url|path/]filename
 
 If **mplayer** was not found, you just have to go through the PATH modification procedure again.

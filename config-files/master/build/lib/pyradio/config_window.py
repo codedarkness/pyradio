@@ -61,7 +61,7 @@ class PyRadioConfigWindow(object):
     _help_text.append(None)
     _help_text.append(['PyRadio will wait for this number of seconds to get a station/server message indicating that playback has actually started.', '|',
     'If this does not happen within this number of seconds after the connection is initiated, PyRadio will consider the station unreachable, and display the "Failed to connect to: station" message.', '|', 'Press "h"/Left or "l"/Right to change value.',
-    '|', 'Valid values: 5 - 60', 'Default value: 10'])
+    '|', 'Valid values: 5 - 60, 0 disables check', 'Default value: 10'])
     _help_text.append(['Most radio stations use plain old http protocol to broadcast, but some of them use https.', '|', 'If this parameter is enabled, all connections will use http; results depend on the combination of station/player.', '|', 'This value is read at program startup, use "z" to change its effect while mid-session.',
     '|', 'Default value: False'])
     _help_text.append(None)
@@ -178,6 +178,8 @@ class PyRadioConfigWindow(object):
                 pass
         else:
             self._win.addstr(1, self._second_column, 'Option Help', curses.color_pair(4))
+            ''' print distro name '''
+            ''' TODO: make sure it does not overwrite an option name '''
         self.refresh_selection()
 
     def _print_title(self):
@@ -196,6 +198,15 @@ class PyRadioConfigWindow(object):
         except:
             self._win.addstr(0, X, dirty_title.encode('utf-8'), curses.color_pair(3))
         self._win.addstr(self._title + ' ', curses.color_pair(4))
+
+        if self._cnf.distro != 'None':
+            try:
+                X = int((self.maxX - 20 - len(self._cnf.distro) - 1) / 2)
+                self._win.addstr(self.maxY - 1, X, ' Package provided by ', curses.color_pair(5))
+                # self._win.addstr(min_lines + 2, 3 + int(abs(8 - len(self._cnf.distro)) / 2), self._cnf.distro, curses.color_pair(4))
+                self._win.addstr(self._cnf.distro + ' ', curses.color_pair(4))
+            except:
+                pass
 
     def refresh_selection(self):
         self._print_title()
@@ -326,6 +337,8 @@ class PyRadioConfigWindow(object):
         if val[0] == 'connection_timeout':
             if char in (curses.KEY_RIGHT, ord('l')):
                 t = int(val[1][1])
+                if t == 0:
+                    t = 4
                 if t < 60:
                     t += 1
                     self._config_options[val[0]][1] = str(t)
@@ -341,13 +354,15 @@ class PyRadioConfigWindow(object):
                 t = int(val[1][1])
                 if t > 5:
                     t -= 1
-                    self._config_options[val[0]][1] = str(t)
-                    self._win.addstr(
-                        self.selection+1,
-                        3 + len(val[1][0]),
-                        str(t) + ' ', curses.color_pair(6))
-                    self._print_title()
-                    self._win.refresh()
+                else:
+                    t = 0
+                self._config_options[val[0]][1] = str(t)
+                self._win.addstr(
+                    self.selection+1,
+                    3 + len(val[1][0]),
+                    str(t) + ' ', curses.color_pair(6))
+                self._print_title()
+                self._win.refresh()
                 return -1, []
         if char in (ord('k'), curses.KEY_UP):
             self._put_cursor(-1)

@@ -2,13 +2,15 @@
 import sys
 import curses
 import logging
-from argparse import ArgumentParser
+from argparse import ArgumentParser, SUPPRESS as SUPPRESS
 from os import path, getenv, environ
 from sys import platform, version_info
 from contextlib import contextmanager
+from platform import system
 
 from .radio import PyRadio
 from .config import PyRadioConfig, SUPPORTED_PLAYERS
+from .install import PyRadioUpdate, PyRadioUpdateOnWindows, is_pyradio_user_installed, version_string_to_list, get_github_tag
 
 PATTERN = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
@@ -86,16 +88,97 @@ def shell():
     parser.add_argument('-lp', '--list-player-parameters', default=None,
                         action='store_true',
                         help='List extra players parameters.')
+    parser.add_argument('-U', '--update', action='store_true',
+                        help='Update PyRadio.')
+    if platform.startswith('linux'):
+        parser.add_argument('--user', action='store_true', default=False,
+                            help='Install only for current user (linux only).')
+    parser.add_argument('-R', '--uninstall', action='store_true',
+                        help='Uninstall PyRadio.')
     parser.add_argument('--unlock', action='store_true',
                         help="Remove sessions' lock file.")
     parser.add_argument('-d', '--debug', action='store_true',
                         help='Start pyradio in debug mode.')
+    parser.add_argument('-V', '--version', action='store_true',
+                        help='Display version information.')
+    ''' extra downloads
+        only use them after the developer says so,
+        for debug purposes only
+            --devel           download official devel branch
+            --sng-master      download developer release (master)
+            --sng-devel       download developer devel branch
+            --force-update    give a versio > than current,
+                              to check update notification functionality
+    '''
+    parser.add_argument('--sng-master', action='store_true', help=SUPPRESS)
+    parser.add_argument('--sng-devel', action='store_true', help=SUPPRESS)
+    parser.add_argument('--devel', action='store_true', help=SUPPRESS)
+    parser.add_argument('--force-update', default='', help=SUPPRESS)
     args = parser.parse_args()
     sys.stdout.flush()
 
+    config_already_read = False
+
     with pyradio_config_file() as pyradio_config:
 
-        ''' chaeck conflicting parameters '''
+        if args.version:
+            pyradio_config.get_pyradio_version()
+            print('PyRadio version: {}'.format(pyradio_config.current_pyradio_version))
+            print('Python version: {}'.format(sys.version.replace('\n', ' ').replace('\r', ' ')))
+            pyradio_config.read_config()
+            if pyradio_config.distro != 'None':
+                print('Distribution: {}'.format(pyradio_config.distro))
+            sys.exit()
+
+        package = 0
+        if args.uninstall or args.update:
+            if args.sng_master:
+                package = 1
+            elif args.sng_devel:
+                package = 2
+            elif args.devel:
+                package = 3
+            if not config_already_read:
+                read_config(pyradio_config)
+                config_already_read = True
+            if pyradio_config.distro != 'None' and \
+                    not platform.startswith('win'):
+                no_update(args.uninstall)
+
+        if args.update:
+            if package == 0:
+                pyradio_config.get_pyradio_version()
+                last_tag = get_github_tag()
+                if last_tag:
+                    print('Released version   :  {}'.format(last_tag))
+                    print('Installed version  :  {}'.format(pyradio_config.current_pyradio_version))
+                    if version_string_to_list(last_tag) <= version_string_to_list(pyradio_config.current_pyradio_version):
+                        print('Latest version already installed. Nothing to do....')
+                        sys.exit()
+                else:
+                    print('Error reading online version.\nPlease make sure you are connected to the internet and try again.')
+                    sys.exit(1)
+
+            try:
+                upd = PyRadioUpdate(package=package)
+                if platform.startswith('linux'):
+                    upd.user = args.user
+                upd.update_pyradio()
+            except RuntimeError:
+                upd = PyRadioUpdateOnWindows(package=package)
+                upd.update_or_uninstall_on_windows(mode='update-open')
+            sys.exit()
+
+        if args.uninstall:
+            try:
+                upd = PyRadioUpdate(package=package)
+                upd.remove_pyradio()
+            except RuntimeError:
+                upd = PyRadioUpdateOnWindows(package=package)
+                upd.update_or_uninstall_on_windows(mode='uninstall-open')
+            sys.exit()
+
+        ''' check conflicting parameters '''
         if args.active_player_param_id and \
                 args.extra_player_parameters:
           print('Error: You cannot use parameters "-ep" and "-ap" together!\n')
@@ -180,13 +263,9 @@ def shell():
 
         if args.list is False and args.add is False:
             print('Reading config...')
-        ret = pyradio_config.read_config()
-        if ret == -1:
-            print('Error opening config: "{}"'.format(pyradio_config.config_file))
-            sys.exit(1)
-        elif ret == -2:
-            print('Config file is malformed: "{}"'.format(pyradio_config.config_file))
-            sys.exit(1)
+        if not config_already_read:
+            read_config(pyradio_config)
+            config_already_read = True
 
         if args.use_player != '':
             requested_player = args.use_player
@@ -263,24 +342,66 @@ def shell():
             pyradio_config,
             play=args.play,
             req_player=requested_player,
-            theme=theme_to_use
+            theme=theme_to_use,
+            force_update=args.force_update
         )
         ''' Setting ESCAPE key delay to 25ms
             Refer to: https://stackoverflow.com/questions/27372068/why-does-the-escape-key-have-a-delay-in-python-curses
         '''
         environ.setdefault('ESCDELAY', '25')
-        set_terminal_title()
+
+        ''' set window title '''
+        if platform.startswith('win'):
+            import ctypes
+            try:
+                if pyradio_config.locked:
+                    win_title = 'PyRadio: Your Internet Radio Player (Session Locked)'
+                else:
+                    win_title = 'PyRadio: Your Internet Radio Player'
+                ctypes.windll.kernel32.SetConsoleTitleW(win_title)
+            except:
+                pass
+        else:
+            try:
+                if pyradio_config.locked:
+                    sys.stdout.write('\x1b]2;PyRadio: Your Internet Radio Player (Session Locked)\x07')
+                else:
+                    sys.stdout.write('\x1b]2;PyRadio: Your Internet Radio Player\x07')
+            except:
+                pass
+        sys.stdout.flush()
+
+        ''' curses wrapper '''
         curses.wrapper(pyradio.setup)
+
+        ''' curses is off '''
         if pyradio.setup_return_status:
             if pyradio_config.PROGRAM_UPDATE:
-                print('\nUpdating PyRadio')
-                print('  Current version: {}'.format(pyradio_config.PROGRAM_UPDATE['cur_version'].replace(' PyRadio ', '')))
-                print('      New version: {}\n'.format(pyradio_config.PROGRAM_UPDATE['new_version']))
-                print('\n')
+                if platform.startswith('win'):
+                    upd = PyRadioUpdateOnWindows()
+                    upd.update_or_uninstall_on_windows(mode='update-open')
+                else:
+                    upd = PyRadioUpdate()
+                    upd.user = is_pyradio_user_installed()
+                    upd.update_pyradio()
             else:
                 print('\nThank you for using PyRadio. Cheers!')
         else:
             print('\nThis terminal can not display colors.\nPyRadio cannot function in such a terminal.\n')
+
+def read_config(pyradio_config):
+    ret = pyradio_config.read_config()
+    if ret == -1:
+        print('Error opening config: "{}"'.format(pyradio_config.config_file))
+        sys.exit(1)
+    elif ret == -2:
+        print('Config file is malformed: "{}"'.format(pyradio_config.config_file))
+        sys.exit(1)
+
+def no_update(uninstall):
+    action = 'uninstall' if uninstall else 'update'
+    print('PyRadio has been installed using either pip or your distribution\'s\npackage manager. Please use that to {} it.\n'.format(action))
+    sys.exit(1)
 
 def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True):
     if exit_if_malformed:
@@ -324,28 +445,6 @@ def print_playlist_selection_error(a_selection, cnf, ret, exit_if_malformed=True
     elif ret == -8:
         print('File type not supported')
         sys.exit(1)
-
-def set_terminal_title():
-    # set window title
-    if platform.startswith('win'):
-        import ctypes
-        try:
-            if pyradio_config.locked:
-                ctypes.windll.kernel32.SetConsoleTitleW('PyRadio: The Internet Radio player (Session Locked)')
-            else:
-                ctypes.windll.kernel32.SetConsoleTitleW('PyRadio: The Internet Radio player')
-        except:
-            pass
-    else:
-        try:
-            if pyradio_config.locked:
-                sys.stdout.write('\x1b]2;PyRadio: The Internet Radio player (Session Locked)\x07')
-            else:
-                sys.stdout.write('\x1b]2;PyRadio: The Internet Radio player\x07')
-        except:
-            pass
-
-    sys.stdout.flush()
 
 def open_conf_dir(cnf):
     import subprocess

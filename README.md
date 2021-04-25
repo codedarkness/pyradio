@@ -14,6 +14,6 @@ PyRadio is a console based Internet radio player. It is implemented in Python, a
 
 ### Note
 
-PyRadio Version 0.8.8.5
+PyRadio Version 0.8.9.1
 
 Python3-setuptools is a dependency for PyRadio.

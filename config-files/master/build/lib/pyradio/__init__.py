@@ -1,6 +1,6 @@
 " pyradio -- Console radio player. "
 
-version_info = (0, 8, 8, 5)
+version_info = (0, 8, 9, 1)
 
 # Application state:
 # New stable version:  ''
@@ -10,7 +10,7 @@ app_state = ''
 
 # Set it to True if new stations have been
 # added to the package's stations.csv
-stations_updated = True
+stations_updated = False
 
 
 __version__ = version = '.'.join(map(str, version_info))

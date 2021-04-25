@@ -5,6 +5,7 @@ pyradio/__init__.py
 pyradio/browser.py
 pyradio/cjkwrap.py
 pyradio/common.py
+pyradio/compare_files.py
 pyradio/config
 pyradio/config.py
 pyradio/config_window.py
@@ -12,6 +13,7 @@ pyradio/countries.py
 pyradio/del_vlc_log.py
 pyradio/edit.py
 pyradio/encodings.py
+pyradio/install.py
 pyradio/log.py
 pyradio/main.py
 pyradio/player.py

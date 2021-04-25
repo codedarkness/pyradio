@@ -4,38 +4,61 @@ Command line internet radio player.
 
 Ben Dowling - [https://github.com/coderholic](https://github.com/coderholic)
 
-## Table of contents
+## Table of Contents
+<!-- vim-markdown-toc Marked -->
 
 * [Requirements](#requirements)
 * [Installation](#installation)
 * [Command line options](#command-line-options)
 * [Controls](#controls)
-* [PyRadio's Modes](#pyradios-modes)
+* [PyRadio Modes](#pyradio-modes)
 * [Config file](#config-file)
 * [About Playlist files](#about-playlist-files)
+    * [Integrating new stations](#integrating-new-stations)
+    * [Specifying a playlist to load (command line)](#specifying-a-playlist-to-load-(command-line))
+    * [Managing playlists (within PyRadio)](#managing-playlists-(within-pyradio))
+    * [Managing "foreign" playlists](#managing-"foreign"-playlists)
+    * [Playlist history](#playlist-history)
 * [Search function](#search-function)
 * [Line editor](#line-editor)
+    * [CJK characters support](#cjk-characters-support)
 * [Moving stations around](#moving-stations-around)
-* [Specifying stations' encoding](#specifying-stations-encoding)
-* [Player detection / selection](#player-detection-selection)
+* [Specifying stations' encoding](#specifying-stations'-encoding)
+    * [Station by station encoding declaration](#station-by-station-encoding-declaration)
+    * [Global encoding declaration](#global-encoding-declaration)
+    * [Finding the right encoding](#finding-the-right-encoding)
+* [Player detection / selection](#player-detection-/-selection)
+    * [Extra Player Parameters](#extra-player-parameters)
+        * [Using the command line](#using-the-command-line)
+        * [Using the Configuration Window](#using-the-configuration-window)
+    * [Changing parameters set](#changing-parameters-set)
 * [Player connection protocol](#player-connection-protocol)
 * [Player default volume level](#player-default-volume-level)
+    * [MPV](#mpv)
+    * [MPlayer](#mplayer)
 * [Displaying Station Info](#displaying-station-info)
 * [Copying and pasting - Registers](#copying-and-pasting---registers)
 * [PyRadio Themes](#pyradio-themes)
+    * [Using transparency](#using-transparency)
 * [Mouse support](#mouse-support)
 * [Session Locking](#session-locking)
+    * [Session unlocking](#session-unlocking)
 * [Update notification](#update-notification)
+    * [Updating a pre 0.8.9 installation](#updating-a-pre-0.8.9-installation)
 * [Cleaning up](#cleaning-up)
 * [Debug mode](#debug-mode)
 * [Reporting bugs](#reporting-bugs)
+* [Packaging Pyradio](#packaging-pyradio)
 * [TODO](#todo)
-* [Acknowlegement](#acknowlegement)
+* [Acknowledgment](#acknowledgment)
+
+<!-- vim-markdown-toc -->
 
 ## Requirements
-
-* python 2.7+/3.5+
-* MPV, MPlayer or VLC installed and in your path.
+* python 2.7/3.5+
+    - requests
+    - dnspython
+* MPV, MPlayer or VLC installed and in your path
 
 ## Installation
 
@@ -45,56 +68,57 @@ In any other case, and since **PyRadio** is currently not available via pip, you
 
 ## Command line options
 
-```
-$ pyradio -h
+    $ pyradio -h
 
-usage: pyradio [-h] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER] [-a] [-ls] [-l]
-               [-t THEME] [-scd] [-ocd] [-ep EXTRA_PLAYER_PARAMETERS]
-               [-ap ACTIVE_PLAYER_PARAM_ID] [-lp] [--unlock] [-d]
+    usage: pyradio [-h] [-s STATIONS] [-p [PLAY]] [-u USE_PLAYER] [-a] [-ls] [-l]
+                   [-t THEME] [-scd] [-ocd] [-ep EXTRA_PLAYER_PARAMETERS]
+                   [-ap ACTIVE_PLAYER_PARAM_ID] [-lp] [--unlock] [-d]
 
-Curses based Internet radio player
+    Curses based Internet radio player
 
-optional arguments:
-  -h, --help            show this help message and exit
-  -s STATIONS, --stations STATIONS
-                        Use specified station CSV file.
-  -p [PLAY], --play [PLAY]
-                        Start and play.The value is num station or empty for
-                        random.
-  -u USE_PLAYER, --use-player USE_PLAYER
-                        Use specified player. A comma-separated list can be
-                        used to specify detection order. Supported players:
-                        mpv, mplayer, vlc.
-  -a, --add             Add station to list.
-  -ls, --list-playlists
-                        List of available playlists in config dir.
-  -l, --list            List of available stations in a playlist.
-  -t THEME, --theme THEME
-                        Use specified theme.
-  -scd, --show-config-dir
-                        Print config directory [CONFIG DIR] location and exit.
-  -ocd, --open-config-dir
-                        Open config directory [CONFIG DIR] with default file
-                        manager.
-  -ep EXTRA_PLAYER_PARAMETERS, --extra-player_parameters EXTRA_PLAYER_PARAMETERS
-                        Provide extra player parameters as a string. The
-                        parameter is saved in the configuration file and is
-                        activated for the current session. The string's format
-                        is [player_name:parameters]. player_name can be 'mpv',
-                        'mplayer' or 'vlc'. Alternative format to pass a
-                        profile: [player_name:profile:profile_name]. In this
-                        case, the profile_name must be a valid profile defined
-                        in the player's config file (not for VLC).
-  -ap ACTIVE_PLAYER_PARAM_ID, --active-player-param-id ACTIVE_PLAYER_PARAM_ID
-                        Specify the extra player parameter set to be used with
-                        the default player. ACTIVE_PLAYER_PARAM_ID is 1-11
-                        (refer to the output of the -lp option)
-  -lp, --list-player-parameters
-                        List extra players parameters.
-  --unlock              Remove sessions' lock file.
-  -d, --debug           Start pyradio in debug mode.
+    optional arguments:
+      -h, --help            show this help message and exit
+      -s STATIONS, --stations STATIONS
+                            Use specified station CSV file.
+      -p [PLAY], --play [PLAY]
+                            Start and play.The value is num station or empty for
+                            random.
+      -u USE_PLAYER, --use-player USE_PLAYER
+                            Use specified player. A comma-separated list can be
+                            used to specify detection order. Supported players:
+                            mpv, mplayer, vlc.
+      -a, --add             Add station to list.
+      -ls, --list-playlists
+                            List of available playlists in config dir.
+      -l, --list            List of available stations in a playlist.
+      -t THEME, --theme THEME
+                            Use specified theme.
+      -scd, --show-config-dir
+                            Print config directory [CONFIG DIR] location and exit.
+      -ocd, --open-config-dir
+                            Open config directory [CONFIG DIR] with default file
+                            manager.
+      -ep EXTRA_PLAYER_PARAMETERS, --extra-player_parameters EXTRA_PLAYER_PARAMETERS
+                            Provide extra player parameters as a string. The
+                            parameter is saved in the configuration file and is
+                            activated for the current session. The string's format
+                            is [player_name:parameters]. player_name can be 'mpv',
+                            'mplayer' or 'vlc'. Alternative format to pass a
+                            profile: [player_name:profile:profile_name]. In this
+                            case, the profile_name must be a valid profile defined
+                            in the player's config file (not for VLC).
+      -ap ACTIVE_PLAYER_PARAM_ID, --active-player-param-id ACTIVE_PLAYER_PARAM_ID
+                            Specify the extra player parameter set to be used with
+                            the default player. ACTIVE_PLAYER_PARAM_ID is 1-11
+                            (refer to the output of the -lp option)
+      -lp, --list-player-parameters
+                            List extra players parameters.
+      -U, --update          Update PyRadio.
+      --user                Install only for current user (linux only).
+      -R, --uninstall       Uninstall PyRadio.
+      --unlock              Remove sessions' lock file.
+      -d, --debug           Start pyradio in debug mode.
 
-```
 
 The following options can also be set in **PyRadio**'s [configuration file](#config-file):
 
@@ -105,41 +129,39 @@ The following options can also be set in **PyRadio**'s [configuration file](#con
 
 ## Controls
 
-```
-                  Main window                                      Playlists window                   Themes window
--------------------------------------------------------------------------------------------------------------------------------------
-Up/Down/j/k/
-PgUp/PgDown       Change station selection                         Change station playlist            Change station theme
-g                 Jump to first station                            Jump to first playlist             Jump to first theme
-<n>G              Jump to n-th / last station                      Jump to n-th / last playlist       Jump to n-th / last theme
-H M L             Jump to the top / middle bottom of the list      [Valid]                            -
-P                 Jump to playing station                          Jump to playing playlist           -
-Enter/Right/l     Play selected station                            Open selected playlist             Apply selected theme
-r                 Select and play a random station                 Re-read playlists from disk        -
-Space/Left/h      Stop/start playing selected station              -                                  -
-Space             -                                                -                                  Apply theme and make it default
--/+ or ,/.        Change volume                                    [Valid]                            [Valid]
-m                 Mute / unmute player                             [Valid]                            [Valid]
-v                 Save volume (not applicable for vlc)             [Valid]                            [Valid]
-o s R             Open / Save / Reload playlist                    -                                  -
-a A               Add / append a new station                       -                                  -
-e                 Edit current station                             -                                  -
-E                 Change station's encoding                        -                                  -
-DEL,x             Delete selected station                          -                                  -
-t T               Load theme / Toggle transparency                 [Valid]                            [Valid]
-c                 Open Configuration window.                       -                                  -
-/ n N             Search, go to next / previous result             [Valid]                            [Valid]
-J                 Create a jump tag
-<n>^U <n>^D       Move station up / down.                          -                                  -
-' \ y             Get into Registers, Extra Commands               y (yank) is not applicable         -
-                  and Yank modes, respectively
-z                 Toggle "Force http connections"                  -                                  -
-Z                 Display the "Extra Player Parameter" window      -                                  -
-?                 Show keys help                                   [Valid]                            [Valid]
-#                 Redraw window                                    [Valid]                            [Valid]
-Esc/q             Quit                                             -                                  -
-Esc/q/Left/h      -                                                Cancel / close window              Cancel / close window
-```
+                      Main window                                      Playlists window                   Themes window
+    -------------------------------------------------------------------------------------------------------------------------------------
+    Up/Down/j/k/
+    PgUp/PgDown       Change station selection                         Change station playlist            Change station theme
+    g                 Jump to first station                            Jump to first playlist             Jump to first theme
+    <n>G              Jump to n-th / last station                      Jump to n-th / last playlist       Jump to n-th / last theme
+    H M L             Jump to the top / middle bottom of the list      [Valid]                            -
+    P                 Jump to playing station                          Jump to playing playlist           -
+    Enter/Right/l     Play selected station                            Open selected playlist             Apply selected theme
+    r                 Select and play a random station                 Re-read playlists from disk        -
+    Space/Left/h      Stop/start playing selected station              -                                  -
+    Space             -                                                -                                  Apply theme and make it default
+    -/+ or ,/.        Change volume                                    [Valid]                            [Valid]
+    m                 Mute / unmute player                             [Valid]                            [Valid]
+    v                 Save volume (not applicable for vlc)             [Valid]                            [Valid]
+    o s R             Open / Save / Reload playlist                    -                                  -
+    a A               Add / append a new station                       -                                  -
+    e                 Edit current station                             -                                  -
+    E                 Change station's encoding                        -                                  -
+    DEL,x             Delete selected station                          -                                  -
+    t T               Load theme / Toggle transparency                 [Valid]                            [Valid]
+    c                 Open Configuration window.                       -                                  -
+    / n N             Search, go to next / previous result             [Valid]                            [Valid]
+    J                 Create a jump tag
+    <n>^U <n>^D       Move station up / down.                          -                                  -
+    ' \ y             Get into Registers, Extra Commands               y (yank) is not applicable         -
+                      and Yank modes, respectively
+    z                 Toggle "Force http connections"                  -                                  -
+    Z                 Display the "Extra Player Parameter" window      -                                  -
+    ?                 Show keys help                                   [Valid]                            [Valid]
+    #                 Redraw window                                    [Valid]                            [Valid]
+    Esc/q             Quit                                             -                                  -
+    Esc/q/Left/h      -                                                Cancel / close window              Cancel / close window
 
 The same logic applies to all **PyRadio** windows.
 
@@ -150,7 +172,7 @@ The same logic applies to all **PyRadio** windows.
 **Note:** When tagging a station position for a move action (by pressing "**J**"), the position will be displayed at the right bottom corner of the window, suffixed by a "*J*", i.e. pressing "*J*" on position *35* will display *[35J]*.
 
 
-## PyRadio's Modes
+## PyRadio Modes
 
 **PyRadio** has the following primary modes:
 
@@ -161,6 +183,8 @@ The same logic applies to all **PyRadio** windows.
 3. The **Registers** mode. This is identical to the "*Playlist*" mode, but instead of displaying playlists, it displays register. You can enter this mode by pressing "**''**" (two single quotes) and exit from it by pressing "**Esc**" or "**q**". You can also press "**'**" (single quote) to get to the **Playlist** mode and back.
 
 4. The **Register Main** mode, which is identical to the "*Main*" mode, except it displays the content of a **named** register.
+
+5. The **Listening** mode, which is intended to be used when you want **PyRadio** to just play your favorite station and not take up too much space. It is ideal for tilling window manager use, as the whole TUI can be reduced all the way down to a single line (displaying the "*Status Bar*"). In this mode, adjusting, muting and saving the volume are the only action available. To get **PyRadio** back to normal operation one would just resize its window to a reasonable size (7 lines vertically, or more).
 
 A set of **secondary modes** is also available (a secondary mode works within a primary one):
 
@@ -194,10 +218,18 @@ Optionally, a third column can be inserted, stating the encoding used by the sta
 
 **PyRadio** will by default load the user's stations file (e.g. *~/.config/pyradio/stations.csv*) to read the stations from. If this file is not found, it will be created and populated with a default set of stations.
 
-**Tip:** If you already have a custom *stations.csv* file, but want to update it with **PyRadio**'s default one, you just rename it, run **PyRadio** (so that the default one get created) and then merge the two files.
-
-
 **Note:** Older versions used to use **~/.pyradio** as default stations file. If this file is found, it will be copied to use's config directory (e.g. **~/.config/pyradio**) and renamed to **stations.csv** or if this file exists, to **pyradio.csv**. In this case, this file will be the default one.
+
+
+### Integrating new stations
+
+When the package's "*stations.csv*" files is updated, the changes it has will not automatically appear in the user's stations file.
+
+What **PyRadio** will do is inform the user that these changes do exist and give him a chance to **integrate** these changes to his stations file, by appending the new stations to the file.
+
+When this is done, the first added station will be selected so that the user can inspect the changes and decide to keep or delete the new stations.
+
+**PyRadio** will only add stations to the user's stations file; no station will be deleted as a result of this procedure.
 
 ### Specifying a playlist to load (command line)
 
@@ -213,30 +245,24 @@ Examples:
 
 To load a playlist called "**blues.csv**", one would use the command:
 
-```
-pyradio -s /path/to/blues.csv
-```
+    pyradio -s /path/to/blues.csv
 
 If this file was saved inside **PyRadio**'s configuration directory, one could use the following command:
 
-```
-pyradio -s blues
-```
+    pyradio -s blues
 
 To use the playlist number, one would execute the commands:
 
-```
-$ pyradio -ls
-Playlists found in "/home/user/.config/pyradio"
-  1. hip-hop
-  2. party
-  3. stations
-  4. huge
-  5. blues
-  6. rock
-  7. pop
-$ pyradio -s 5
-```
+    $ pyradio -ls
+    Playlists found in "/home/user/.config/pyradio"
+      1. hip-hop
+      2. party
+      3. stations
+      4. huge
+      5. blues
+      6. rock
+      7. pop
+    $ pyradio -s 5
 
 **Note:** The default playlist to load can also be set in **PyRadio**'s [configuration file](#config-file), parameter **default_playlist** (default value is **stations**).
 
@@ -352,26 +378,20 @@ Example:
 
 Suppose we have a playlist with one **utf-8** encoded station:
 
-```
-Station1,Station1_URL
-```
+    Station1,Station1_URL
 
 Now we want to add "**Station2**" which is **iso-8859-7** (Greek) encoded.
 
 Since we know **all stations** must comprise the third (encoding) column, we add it to the existing station:
 
 
-```
-Station1,Station1_URL,
-```
+    Station1,Station1_URL,
 
 Finally, we insert the new station to the playlist:
 
 
-```
-Station1,Station1_URL,
-Station2,Station2_URL,iso-8859-7
-```
+    Station1,Station1_URL,
+    Station2,Station2_URL,iso-8859-7
 
 **Note:**
 Using the **-a** command line option will save you all this trouble, as it will automatically take care of creating a valid **CSV** file. Alternatively, you can change the selected station's encoding by pressing "**E**" while in **PyRadio**.
@@ -403,14 +423,12 @@ Users can alter this default behavior by using the **-u** command line option. T
 
 Example:
 
-```
-pyradio -u vlc
-```
+    pyradio -u vlc
+
 will instruct **PyRadio** to use VLC; if it is not found, the program will terminate with an error.
 
-```
-pyradio -u vlc,mplayer,mpv
-```
+    pyradio -u vlc,mplayer,mpv
+
 will instruct **PyRadio** to look for VLC, then MPlayer and finaly for MPV and use whichever it finds first; if none is found, the program will terminate with an error.
 
 The default player to use can also be set in **PyRadio**'s [configuration file](#config-file), parameter **player** (default value is **mpv, mplayer, vlc**), using the "*Configuration Window*", through which **extra player parameters** can be set.
@@ -424,7 +442,7 @@ All three supported players can accept a significant number of "*command line pa
 | Player  | Parameters                                                                                    |
 |---------|-----------------------------------------------------------------------------------------------|
 | mpv     | --no-video, --quiet, --input-ipc-server, --input-unix-socket, --playlist, --profile           |
-| mplayer | -vo, -quiet, -playlist, -profile                                                              |
+| mplayer | -vo, -quiet, -playlist, -profile                                  |
 | vlc     | -Irc, -vv<br>**Windows only:** --rc-host, --file-logging, --logmode, --log-verbose, --logfile |
 
 **Note:** The user should not use or change the above player parameters. Failing to do so, may render the player ***unusable***.
@@ -435,7 +453,7 @@ This way, 10 sets of parameters can be inserted and made available for selection
 
 #### Using the command line
 
-When the command line parameter (**-epp** or **--extra_player_parameters**) is used, the parameters specified must be of a specific format, and will be added to the list of parameters and made default for the player for the current session.
+When the command line parameter (**-ep** or **--extra_player_parameters**) is used, the parameters specified must be of a specific format, and will be added to the list of parameters and made default for the player for the current session.
 
 The format of the parameter is the following: **[player_name:parameters]**
 
@@ -446,9 +464,7 @@ Where:
 
 Example:
 
-```
-pyradio -epp "vlc:--force-dolby-surround 2"
-```
+    pyradio -ep "vlc:--force-dolby-surround 2"
 
 **Note:** When a parameter is passed to "*mpv*" or "*mplayer*", **PyRadio**" will use the default player profile (called "**pyradio**").
 
@@ -461,9 +477,7 @@ Where:
 
 Example:
 
-```
-pyradio -epp "mpv:profile:second_sound_card"
-```
+    pyradio -ep "mpv:profile:second_sound_card"
 
 #### Using the Configuration Window
 
@@ -536,8 +550,12 @@ Example:
     volume=100
 
     [pyradio]
+    softvol=1
+    softvol-max=300
     volstep=1
-    volume=28
+    volume=50
+
+**Note:** Starting with **PyRadio v. 0.8.9**, *mplayer*'s default profile will use its internal mixer to adjust its volume; this is accompliced using the "*softvol=1*" and "*softvol-max=300*" lines above. The user may choose to remove these lines from the config (to activate system-wide volume adjustment) or add them to the config (in case the profile was created by an older **PyRadio** version).
 
 ## Displaying Station Info
 
@@ -664,57 +682,29 @@ If for any reason **PyRadio** always starts in "*locked mode*", one can **unlock
 
 **PyRadio** will periodically (once every 10 days) check whether a new version has been released.
 
-If so, a notification message will be displayed, informing the user about it.
+If so, a notification message will be displayed, informing the user about it and asking to proceed with updating the program (provided this is not a distribution package).
+
+### Updating a pre 0.8.9 installation
+
+First thing you do is get the installation script. Open a **terminal** and type:
+
+    cd
+    wget https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py
+
+or using curl:
+
+    cd
+    curl -L https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py -o install.py
+
+**Note**: If you have neither *wget* or *curl* installed, or you are on Windows, just right click on [this link](https://raw.githubusercontent.com/coderholic/pyradio/master/pyradio/install.py) and use your browser "**Save link as**" menu entry to save the file in your home folder.
+
+Finally, execute the command:
+
+    python install.py --force
 
 ## Cleaning up
 
-Since version 0.8.7.3 (0.8.8-beta2), it is not necessary to follow the previous procedure any more; **PyRadio** will search and remove any previously installed files when the "**-u**" (uninstall) parameter is used.
-
-This procedure will remove any **Pyradio** files installed in your system, but will leave instact **PyRadio** configuration files.
-
-Windows users notice: This procedure **will not** uninstall python, mplayer, or git from your system.
-
-Example:
-
-    $ devel/build_install_pyradio -u
-    Uninstalling PyRadio
-    ** Removing executable ... done
-    ** Removing help files ... done
-    Looking for python installed files
-    ** Removing "pyradio-0.8.8-py3.8.egg" ... done
-    ** Removing "pyradio-0.8.6-py2.7.egg" ... done
-    ** Removing "pyradio-0.8.8-py3.8.egg" ... done
-    PyRadio successfully uninstalled
-
-In this example, running *devel/build_install_pyradio -u* has removed **PyRadio** python 3.8 system wide installation files, **PyRadio** python 2.7 system wide installation files,  and **PyRadio** python 3.8 user installation files, found in the system.
-
-I would recommend to execute *devel/build_install_pyradio -u* from time to time, and reinstall **Pyradio** right after its completion.
-
-### Previous cleaning up procedure
-
-As **PyRadio** versions accumulate, when building from source, one may have to *clean up* old installation files.
-
-To do that, one has to observe the installation process in order to find out where the package is installed. The installation would complete printing the following messages (on *python 3.7*):
-
-    Installed /usr/lib/python3.7/site-packages/pyradio-0.7.8-py3.7.egg
-    Processing dependencies for pyradio==0.7.8
-    Finished processing dependencies for pyradio==0.7.8
-
-From this we get that the installation directory is **/usr/lib/python3.7/site-packages**. This may be different though, depending on the distribution and python version used.
-
-Let's see what **PyRadio** files exist there:
-
-
-    $ ls -d /usr/lib/python3.7/site-packages/pyradio*
-
-    /usr/lib/python3.7/site-packages/pyradio-0.7.6.2-py3.7.egg
-    /usr/lib/python3.7/site-packages/pyradio-0.7.7-py3.7.egg
-    /usr/lib/python3.7/site-packages/pyradio-0.7.8-py3.7.egg
-
-As we see, previous versions still exist in this system: **0.7.6.2** and **0.7.7**. These files (actually directories) can safely be removed:
-
-    $ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-.7.6.2-py3.7.egg
-    $ sudo rm -rf /usr/lib/python3.7/site-packages/pyradio-0.7.7-py3.7.egg
+**PyRadio** will uninstall all previously installed versions when updated (using the **-U** command line parameter), so no extra steps are needed any more to house keep your system.
 
 ## Debug mode
 
@@ -739,15 +729,41 @@ Then try to reproduce the bug and exit **pyradio**.
 
 Finally, include the file produced in your report.
 
+## Packaging Pyradio
+
+If you are a packager and would like to produce a package for your distribution please do follow this mini guide.
+
+First of all, make sure you declare the pacakges's requirements to the relevant section of your manifest (or whatever) file. These are:
+1. requests
+2. dnspython
+
+After that, you will have to modify some files, because **PyRadio** is able to update and uninstall itself, when installed from source. This is something you do not want to be happening when your package is used; **PyRadio** should be updated and uninstalled using the distro package manager.
+
+In order to accomplice that, you just have to change the **distro** configuration parameter in the **config** file. **PyRadio** will read this parameter and will disable updating and uninstalling, when set to anything other than "**None**". So, here's how you do that:
+
+Once you are in the sources top level directory (typically "*pyradio*"), you execute the command:
+
+    sed -i 's/distro = None/distro = YOUR DISTRO NAME/' pyradio/config
+
+Then you go on to produce the package as you would normally do.
+
+For example, an **Arch Linux** packager would use this command:
+
+    sed -i 's/distro = None/distro = Arch Linux/' pyradio/config
+
+The distro name you insert here will appear in **PyRadio**'s "*Configuration Window*". In addition to that it will appear in the log file, so that I know where the package came from while debugging.
+
+Having said that, if you are not packaging for a specific distribution, please do use something meaningful (for example, using "*xxx*" will do the job, but provides no useful information).
+
 ## TODO
 
 - [ ] Any user request I find interesting :)
+- [ ] Use Radio Browser service ([#80](https://github.com/coderholic/pyradio/issues/80) [#93](https://github.com/coderholic/pyradio/issues/93) [#112](https://github.com/coderholic/pyradio/issues/112))
+- [x] Notify the user that the package's stations.csv has changed -v 0.8.9
+- [x] Update / uninstall using command line parameters (-U / -R) - v. 0.8.9
 - [x] Basic mouse support ([#119](https://github.com/coderholic/pyradio/issues/119)) - v. 0.8.8.3
 - [x] Players extra parameters ([#118](https://github.com/coderholic/pyradio/issues/118)) - v. 0.8.8.3
 - [x] New player selection configuration window ([#118](https://github.com/coderholic/pyradio/issues/118)) - v. 0.8.8.3
-- [ ] Notify the user that the package's stations.csv has changed
-- [ ] Update / uninstall using command line parameters (-U / -R)
-- [ ] Use Radio Browser service ([#80](https://github.com/coderholic/pyradio/issues/80) [#93](https://github.com/coderholic/pyradio/issues/93) [#112](https://github.com/coderholic/pyradio/issues/112))
 
 ## Acknowledgment
 

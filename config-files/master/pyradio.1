@@ -1,7 +1,7 @@
 .\" Copyright (C) 2011 Ben Dowling <http://www.coderholic.com/pyradio>
 .\" This manual is freely distributable under the terms of the GPL.
 .\"
-.TH PYRADIO 1 "February 2021"
+.TH PYRADIO 1 "April 2021"
 
 .SH NAME
 .PP
@@ -44,6 +44,12 @@ Provide extra player parameters as a string. For more information, refer to the 
 Specify the extra player parameter set to be used with the default player. \fIACTIVE_PLAYER_PARAM_ID\fR is 1-11.
 .IP \fB-lp
 List extra players parameters.
+.IP \fB-U
+Update \fBpyradio\fR.
+.IP \fB--user
+Install only for current user (linux only).
+.IP \fB-R
+Uninstall \fBpyradio\fR.
 .IP \fB--unlock
 Remove sessions' lock file.
 .IP \fB-d\fR,\fB\ \--debug
@@ -151,6 +157,9 @@ The \fBRegisters\fR mode. This is identical to the "\fIPlaylist\fR" mode, but in
 
 .IP 4. 3
 The \fBRegister Main\fR mode, which is identical to the "\fIMain\fR" mode, except it displays the content of a \fBnamed\fR register.
+
+.IP 5. 3
+The \fBListening\fR mode, which is intended to be used when you want \fBpyradio\fR to just play your favorite station and not take up too much space. It is ideal for tilling window manager use, as the whole TUI can be reduced all the way down to a single line (displaying the "\fIStatus Bar\fR"). In this mode, adjusting, muting and saving the volume are the only actions available. To get \fBpyradio\fR back to normal operation one would just resize its window to a reasonable size (7 lines vertically, or more).
 
 .RE
 
@@ -623,7 +632,16 @@ Example:
 .br
 volstep=1
 .br
-volume=28
+softvol=1
+.br
+softvol-max=300
+.br
+volstep=1
+.br
+volume=50
+
+.IP \fBNote:
+Starting with \fBpyradioR v. 0.8.9\fR, \fImplayer\fR's default profile will use its internal mixer to adjust its volume; this is accompliced using the "\fIsoftvol=1\fR" and "\fIsoftvol-max=300\fR" lines above. The user may choose to remove these lines from the config (to activate system-wide volume adjustment) or add them to the config (in case the profile was created by an older \fBpyradio\fR version).
 
 .SH DISPLAYING STATION INFO
 
@@ -743,7 +761,7 @@ Setting transparency on, will actually force \fBpyradio\fR to not use its own ba
 
 When the \fITheme selection window\fR is visible, a "\fI[T]\fR" string displayed at its bottom right corner will indicate that transparency is \fIon\fR.
 
-## MOUSE SUPPORT
+.SH MOUSE SUPPORT
 
 Being a console application, \fBpyradio\fR was never intended to work with a mouse.
 
@@ -780,7 +798,7 @@ Adjust volume (does not work with all terminals)
 
 Subsequent instances will be "\fIlocked\fR. This means that the user can still play stations, load and edit playlists, load and test themes, but any changes will \fBnot\fR be recorded in the configuration file.
 
-\fBSeeeion unlocking\fR
+\fBSession unlocking\fR
 
 If for any reason \fBpyradio\fR always starts in \fIlocked mode\fR, one can \fBunclock\fR the session, using the "\fB--unlock\fR" command line paremater.
 
@@ -788,72 +806,11 @@ If for any reason \fBpyradio\fR always starts in \fIlocked mode\fR, one can \fBu
 .PP
 \fBpyradio\fR will periodically (once every 10 days) check whether a new version has been released.
 
-If so, a notification message will be displayed, informing the user about it.
+If so, a notification message will be displayed, informing the user about it and asking to proceed with updating the program (provided this is not a distribution package).
 
 .SH CLEANING UP
 
-.PP
-Since version 0.8.7.3 (0.8.8-beta2), it is not necessary to follow the previous procedure any more; \fBpyradio\fR will search and remove any previously installed files when the "\fB-u\fR" (uninstall) parameter is used.
-
-This procedure will remove any \fBpyradio\fR files installed in your system, but will leave instact \fBpyradio\fR configuration files.
-
-Windows users notice: This procedure \fBwill not\fR uninstall python, mplayer, or git from your system.
-
-Example:
-
-    \fI$ \fBdevel/build_install_pyradio -u\fI
-    Uninstalling PyRadio
-    ** Removing executable ... done
-    ** Removing help files ... done
-    Looking for python installed files
-    ** Removing "pyradio-\fB0.8.8-py3.8\fI.egg" ... done
-    ** Removing "pyradio-\fB0.8.6-py2.7\fI.egg" ... done
-    ** Removing "pyradio-\fB0.8.8-py3.8\fI.egg" ... done
-    PyRadio successfully uninstalled\fR
-
-In this example, running \fIdevel/build_install_pyradio -u\fR has removed \fBpyradio\fR python 3.8 system wide installation files, \fBpyradio\fR python 2.7 system wide installation files,  and \fBpyradio\fR python 3.8 user installation files, found in the system.
-
-I would recommend to execute \fBdevel/build_install_pyradio -u\fR from time to time, and reinstall \fBpyradio\fR right after its completion.
-
-.PP
-\fBPREVIOUS CLEANING UP PROCEDURE\fR
-
-As \fBpyradio\fR versions accumulate, when building from source, one may have to \fIclean up\fR old installation files.
-
-To do that, one has to observe the installation process in order to find out where the package is installed. The installation would complete printing the following messages (on \fIpython 3.7\fR):
-
-.HP
-
-\fIInstalled \fB/usr/lib/python3.7/site-packages\fI/pyradio-\fB0.7.8\fI-py3.7.egg
-.br
-Processing dependencies for pyradio==\fB0.7.8\fI
-.br
-Finished processing dependencies for pyradio==\fB0.7.8\fR
-
-.PP
-From this we get that the installation directory is \fB/usr/lib/python3.7/site-packages\fR. This may be different though, depending on the distribution and python version used.
-
-Let's see what \fBpyradio\fR files exist there:
-
-.HP
-
-\fI$ \fBls -d /usr/lib/python3.7/site-packages/pyradio*
-
-\fI/usr/lib/python3.7/site-packages/pyradio-\fB0.7.6.2\fI-py3.7.egg
-.br
-/usr/lib/python3.7/site-packages/pyradio-\fB0.7.7\fI-py3.7.egg
-.br
-/usr/lib/python3.7/site-packages/pyradio-\fB0.7.8\fI-py3.7.egg
-
-.PP
-As we see, previous versions still exist in this system: \fB0.7.6.2\fR and \fB0.7.7\fR. These files (actually directories) can safely be removed:
-
-.HP
-
-\fI$ \fBsudo rm -rf /usr/lib/python3.7/site-packages/pyradio-\fI0.7.6.2\fB-py3.7.egg
-.br
-\fI$ \fBsudo rm -rf /usr/lib/python3.7/site-packages/pyradio-\fI0.7.7\fB-py3.7.egg
-
+\fBpyradio\fR will uninstall all previously installed versions when updated (using the \fB-U\fR command line parameter), so no extra steps are needed any more to house keep your system.
 
 .SH DEBUG MODE
 .PP

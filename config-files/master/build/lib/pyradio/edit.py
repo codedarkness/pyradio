@@ -83,16 +83,31 @@ class PyRadioSearch(SimpleCursesLineEdit):
         if self._has_history:
             self.string = self._input_history.return_history(-1, self.string)
 
-    def get_next(self, a_list, start=0, stop=None):
+    def get_next(self,
+                 a_list,
+                 start=0,
+                 stop=None,
+                 search_term=None,
+                 search_function=None
+                 ):
         if self.string:
+            active_search_term = self.string[1:] if self.string[0] == '+' else self.string
+            if search_function and self.string[0] == '+':
+                ''' use online browser search instead '''
+                return search_function(
+                    active_search_term,
+                    start=start,
+                    stop=stop
+                )
+
             for n in eval(self._range_command)(start, len(a_list)):
-                if self.string.lower() in self._get_string(a_list[n]):
+                if active_search_term.lower() in self._get_string(a_list[n]):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('forward search term "{0}" found at {1}'.format(self.string, n))
                     return n
             """ if not found start from list top """
             for n in eval(self._range_command)(0, start):
-                if self.string.lower() in self._get_string(a_list[n]):
+                if active_search_term.lower() in self._get_string(a_list[n]):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('forward search term "{0}" found at {1}'.format(self.string, n))
                     return n
@@ -103,16 +118,31 @@ class PyRadioSearch(SimpleCursesLineEdit):
         else:
             return None
 
-    def get_previous(self, a_list, start=0, stop=None):
+    def get_previous(self,
+                     a_list,
+                     start=0,
+                     stop=None,
+                     search_term=None,
+                     search_function=None
+                     ):
+        active_search_term = self.string[1:] if self.string[0] == '+' else self.string
         if self.string:
+            if search_function and self.string[0] == '+':
+                ''' use online browser search instead '''
+                return search_function(
+                    active_search_term,
+                    start=start,
+                    stop=stop
+                )
+
             for n in eval(self._range_command)(start, -1, -1):
-                if self.string.lower() in self._get_string(a_list[n]):
+                if active_search_term.lower() in self._get_string(a_list[n]):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('backward search term "{0}" found at {1}'.format(self.string, n))
                     return n
             """ if not found start from list end """
             for n in eval(self._range_command)(len(a_list) - 1, start, -1):
-                if self.string.lower() in self._get_string(a_list[n]):
+                if active_search_term.lower() in self._get_string(a_list[n]):
                     if logger.isEnabledFor(logging.DEBUG):
                         logger.debug('backward search term "{0}" found at {1}'.format(self.string, n))
                     return n
